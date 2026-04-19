@@ -1,6 +1,6 @@
 -- 4. 활동 횟수 (핵심 데이터)
 -- =============================================================
-CREATE TABLE knc_activities (
+CREATE TABLE IF NOT EXISTS knc_activities (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   company_id UUID REFERENCES knc_companies(id) ON DELETE CASCADE,
   demand_company_id UUID REFERENCES knc_demand_companies(id) ON DELETE CASCADE,
@@ -10,6 +10,9 @@ CREATE TABLE knc_activities (
   updated_at TIMESTAMPTZ DEFAULT now(),
   UNIQUE(company_id, demand_company_id, risk_no, activity_type)
 );
+
+-- 기존 활동 데이터 삭제 (재실행 시 중복 방지)
+DELETE FROM knc_activities;
 
 -- 활동데이터 344개 INSERT (activity_count > 0)
 INSERT INTO knc_activities (company_id, demand_company_id, risk_no, activity_type, activity_count)
