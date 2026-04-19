@@ -4,13 +4,35 @@
 -- =====================================================
 
 -- 1-1. knc_demand_companies에 month 컬럼 추가
-ALTER TABLE knc_demand_companies ADD COLUMN month VARCHAR(7) DEFAULT '2026-01';
-ALTER TABLE knc_demand_companies DROP CONSTRAINT knc_demand_companies_company_id_demand_no_key;
+ALTER TABLE knc_demand_companies ADD COLUMN IF NOT EXISTS month VARCHAR(7) DEFAULT '2026-01';
+
+-- 기존 UNIQUE 제약조건 동적 삭제 (자동생성 이름이 잘릴 수 있어 동적 조회)
+DO $$
+DECLARE cname TEXT;
+BEGIN
+  SELECT conname INTO cname FROM pg_constraint
+  WHERE conrelid = 'knc_demand_companies'::regclass AND contype = 'u'
+  AND conname LIKE 'knc_demand_companies_company_id_demand_no%';
+  IF cname IS NOT NULL THEN
+    EXECUTE 'ALTER TABLE knc_demand_companies DROP CONSTRAINT ' || cname;
+  END IF;
+END $$;
 ALTER TABLE knc_demand_companies ADD CONSTRAINT knc_demand_companies_uniq UNIQUE(company_id, demand_no, month);
 
 -- 1-2. knc_activities에 month 컬럼 추가
-ALTER TABLE knc_activities ADD COLUMN month VARCHAR(7) DEFAULT '2026-01';
-ALTER TABLE knc_activities DROP CONSTRAINT knc_activities_company_id_demand_company_id_risk_no_activity_key;
+ALTER TABLE knc_activities ADD COLUMN IF NOT EXISTS month VARCHAR(7) DEFAULT '2026-01';
+
+-- 기존 UNIQUE 제약조건 동적 삭제
+DO $$
+DECLARE cname TEXT;
+BEGIN
+  SELECT conname INTO cname FROM pg_constraint
+  WHERE conrelid = 'knc_activities'::regclass AND contype = 'u'
+  AND conname LIKE 'knc_activities_company_id_demand_company%';
+  IF cname IS NOT NULL THEN
+    EXECUTE 'ALTER TABLE knc_activities DROP CONSTRAINT ' || cname;
+  END IF;
+END $$;
 ALTER TABLE knc_activities ADD CONSTRAINT knc_activities_uniq UNIQUE(company_id, demand_company_id, risk_no, activity_type, month);
 
 -- 1-3. knc_company_months (신규) — 기업별 활성 월 목록
