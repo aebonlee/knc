@@ -1,8 +1,9 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../utils/supabase';
 import { ADMIN_EMAILS } from '../config/admin';
 import type { UserProfile } from '../types';
+import site from '../config/site';
 
 interface AuthContextValue {
   user: User | null;
@@ -31,22 +32,61 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (userId: string) => {
-    if (!supabase) return;
-    const { data } = await supabase
+  const loadProfile = useCallback(async (authUser: User) => {
+    if (!supabase || !authUser) {
+      setProfile(null);
+      return;
+    }
+
+    // 1) user_profiles 조회
+    let { data: p } = await supabase
       .from('user_profiles')
       .select('*')
-      .eq('id', userId)
+      .eq('id', authUser.id)
       .single();
-    if (data) {
-      // role 'user' → 'member' 변환
-      if (data.role === 'user') data.role = 'member';
-      setProfile(data);
+
+    // 2) OAuth 첫 로그인 시 프로필 자동 생성
+    if (!p) {
+      const meta = authUser.user_metadata || {};
+      const { data: created } = await supabase
+        .from('user_profiles')
+        .insert({
+          id: authUser.id,
+          email: authUser.email || '',
+          name: meta.full_name || meta.name || '',
+          display_name: meta.full_name || meta.name || meta.preferred_username || '',
+          avatar_url: meta.avatar_url || meta.picture || '',
+          provider: authUser.app_metadata?.provider || 'email',
+          role: 'member',
+          signup_domain: site.url,
+          visited_sites: [site.id],
+        })
+        .select()
+        .single();
+      if (created) p = created;
     }
-  };
+
+    // 3) role 변환 + visited_sites 업데이트
+    if (p) {
+      if (p.role === 'user') p.role = 'member';
+
+      // visited_sites에 현재 사이트 추가
+      const visited = p.visited_sites || [];
+      if (!visited.includes(site.id)) {
+        const updated = [...visited, site.id];
+        await supabase
+          .from('user_profiles')
+          .update({ visited_sites: updated })
+          .eq('id', authUser.id);
+        p.visited_sites = updated;
+      }
+
+      setProfile(p);
+    }
+  }, []);
 
   const refreshProfile = async () => {
-    if (user) await fetchProfile(user.id);
+    if (user) await loadProfile(user);
   };
 
   useEffect(() => {
@@ -55,18 +95,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    // 초기 세션 확인
     supabase.auth.getSession().then(({ data: { session } }) => {
       const u = session?.user ?? null;
       setUser(u);
-      if (u) fetchProfile(u.id);
+      if (u) {
+        loadProfile(u);
+      }
       setLoading(false);
     });
 
+    // 인증 상태 변경 리스너
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       const u = session?.user ?? null;
       setUser(u);
       if (u) {
-        fetchProfile(u.id);
+        loadProfile(u);
       } else {
         setProfile(null);
       }
@@ -74,7 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [loadProfile]);
 
   const handleSignOut = async () => {
     if (!supabase) return;
@@ -88,9 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider
       value={{
-        user,
-        profile,
-        loading,
+        user, profile, loading,
         isLoggedIn: !!user,
         isAdmin,
         signOut: handleSignOut,
