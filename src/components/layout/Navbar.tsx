@@ -22,6 +22,10 @@ export default function Navbar() {
     { path: '/report', label: '보고서' },
   ];
 
+  const externalLinks = [
+    { href: 'https://safety.dreamitbiz.com/', label: '산업안전이란?' },
+  ];
+
   const isActive = (path: string) => location.pathname === path;
 
   return (
@@ -38,6 +42,18 @@ export default function Navbar() {
 
         <div className={`nav-menu ${menuOpen ? 'open' : ''}`}>
           <div className="nav-links">
+            {externalLinks.map(item => (
+              <a
+                key={item.href}
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="nav-link nav-link-external"
+                onClick={() => setMenuOpen(false)}
+              >
+                {item.label}
+              </a>
+            ))}
             {navItems.map(item => (
               <Link
                 key={item.path}

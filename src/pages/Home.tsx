@@ -15,7 +15,7 @@ export default function Home() {
   }
 
   return (
-    <div className="page dashboard-page">
+    <div className="page dashboard-page dashboard-fit">
       <div className="page-header">
         <h1>전체 통합집계 대시보드</h1>
         <p>{settings.project_phase} 사회비용 절감 성과 현황</p>
@@ -29,12 +29,17 @@ export default function Home() {
         companyCount={companiesWithSavings.length}
       />
 
-      <div className="charts-grid">
-        <SavingsChart savingsByType={savingsByType} />
-        <CompanyRankTable companies={companiesWithSavings} />
+      <div className="dashboard-bottom">
+        <div className="chart-card">
+          <SavingsChart savingsByType={savingsByType} />
+        </div>
+        <div className="chart-card">
+          <CompanyRankTable companies={companiesWithSavings} />
+        </div>
+        <div className="chart-card">
+          <RiskBarChart riskSummary={riskSummary} />
+        </div>
       </div>
-
-      <RiskBarChart riskSummary={riskSummary} />
     </div>
   );
 }
