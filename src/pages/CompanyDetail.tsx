@@ -146,6 +146,16 @@ export default function CompanyDetail() {
     }
   };
 
+  const deleteSnapshot = async (snapshotId: string) => {
+    if (!supabase) return;
+    try {
+      await supabase.from(TABLES.activity_snapshots).delete().eq('id', snapshotId);
+      fetchData();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const restoreSnapshot = async (snapshot: ActivitySnapshot) => {
     if (!supabase || !id) return;
 
@@ -339,6 +349,7 @@ export default function CompanyDetail() {
           <SnapshotPanel
             snapshots={monthSnapshots}
             onRestore={restoreSnapshot}
+            onDelete={deleteSnapshot}
           />
         </div>
       ) : (

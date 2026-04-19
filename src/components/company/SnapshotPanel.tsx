@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { FiChevronDown, FiChevronUp, FiRotateCcw } from 'react-icons/fi';
+import { FiChevronDown, FiChevronUp, FiRotateCcw, FiTrash2 } from 'react-icons/fi';
 import type { ActivitySnapshot } from '../../types';
 
 interface Props {
   snapshots: ActivitySnapshot[];
   onRestore: (snapshot: ActivitySnapshot) => void;
+  onDelete: (snapshotId: string) => void;
 }
 
-export default function SnapshotPanel({ snapshots, onRestore }: Props) {
+export default function SnapshotPanel({ snapshots, onRestore, onDelete }: Props) {
   const [open, setOpen] = useState(false);
 
   if (snapshots.length === 0 && !open) return null;
@@ -33,16 +34,28 @@ export default function SnapshotPanel({ snapshots, onRestore }: Props) {
                   </span>
                   <span className="snapshot-desc">{snap.description}</span>
                 </div>
-                <button
-                  className="snapshot-restore-btn"
-                  onClick={() => {
-                    if (confirm('이 시점으로 복원하시겠습니까? 현재 상태는 자동 저장됩니다.')) {
-                      onRestore(snap);
-                    }
-                  }}
-                >
-                  <FiRotateCcw size={13} /> 복원
-                </button>
+                <div className="snapshot-actions">
+                  <button
+                    className="snapshot-restore-btn"
+                    onClick={() => {
+                      if (confirm('이 시점으로 복원하시겠습니까? 현재 상태는 자동 저장됩니다.')) {
+                        onRestore(snap);
+                      }
+                    }}
+                  >
+                    <FiRotateCcw size={13} /> 복원
+                  </button>
+                  <button
+                    className="snapshot-delete-btn"
+                    onClick={() => {
+                      if (confirm('이 저장 이력을 삭제하시겠습니까?')) {
+                        onDelete(snap.id);
+                      }
+                    }}
+                  >
+                    <FiTrash2 size={13} />
+                  </button>
+                </div>
               </div>
             ))
           )}

@@ -1776,6 +1776,12 @@ html[data-theme="dark"] .google-btn:hover:not(:disabled) { background: #3C3C3C; 
   color: var(--text-muted);
 }
 
+.snapshot-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
 .snapshot-restore-btn {
   display: inline-flex;
   align-items: center;
@@ -1795,4 +1801,22 @@ html[data-theme="dark"] .google-btn:hover:not(:disabled) { background: #3C3C3C; 
   border-color: var(--primary);
   color: var(--primary);
   background: var(--primary-bg);
+}
+
+.snapshot-delete-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.snapshot-delete-btn:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+  background: var(--danger-bg);
 }
