@@ -3,12 +3,16 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { FiMenu, FiX, FiSun, FiMoon, FiLogOut, FiUser } from 'react-icons/fi';
+import site from '../../config/site';
+
+const COLOR_THEMES = site.colors as { name: string; color: string }[];
 
 export default function Navbar() {
   const { isLoggedIn, profile, isAdmin, signOut } = useAuth();
-  const { theme, toggleTheme } = useTheme();
+  const { theme, colorTheme, toggleTheme, setColorTheme } = useTheme();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [colorOpen, setColorOpen] = useState(false);
 
   const navItems = [
     { path: '/', label: '대시보드' },
@@ -46,6 +50,31 @@ export default function Navbar() {
           </div>
 
           <div className="nav-actions">
+            {/* Color picker */}
+            <div className="color-picker-wrap">
+              <button
+                className="theme-toggle"
+                onClick={() => setColorOpen(!colorOpen)}
+                title="컬러 테마"
+              >
+                <span className="color-dot" style={{ background: COLOR_THEMES.find(c => c.name === colorTheme)?.color || '#0F2B5B' }} />
+              </button>
+              {colorOpen && (
+                <div className="color-dropdown">
+                  {COLOR_THEMES.map(c => (
+                    <button
+                      key={c.name}
+                      className={`color-option ${colorTheme === c.name ? 'active' : ''}`}
+                      onClick={() => { setColorTheme(c.name as typeof colorTheme); setColorOpen(false); }}
+                      title={c.name}
+                    >
+                      <span className="color-dot" style={{ background: c.color }} />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <button className="theme-toggle" onClick={toggleTheme} title="테마 변경">
               {theme === 'light' ? <FiMoon size={18} /> : <FiSun size={18} />}
             </button>

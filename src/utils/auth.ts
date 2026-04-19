@@ -1,5 +1,31 @@
 import { supabase } from './supabase';
 
+const siteUrl = import.meta.env.VITE_SITE_URL || window.location.origin;
+
+export async function signInWithGoogle() {
+  if (!supabase) throw new Error('Supabase not configured');
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: siteUrl,
+      queryParams: { prompt: 'select_account' },
+    },
+  });
+  if (error) throw error;
+}
+
+export async function signInWithKakao() {
+  if (!supabase) throw new Error('Supabase not configured');
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'kakao',
+    options: {
+      redirectTo: siteUrl,
+      scopes: 'profile_nickname profile_image account_email',
+    },
+  });
+  if (error) throw error;
+}
+
 export async function signInWithEmail(email: string, password: string) {
   if (!supabase) throw new Error('Supabase not configured');
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -36,7 +62,7 @@ export async function getProfile(userId: string) {
 export async function resetPassword(email: string) {
   if (!supabase) throw new Error('Supabase not configured');
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${import.meta.env.VITE_SITE_URL || window.location.origin}/reset-password`,
+    redirectTo: `${siteUrl}/reset-password`,
   });
   if (error) throw error;
 }
