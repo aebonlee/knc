@@ -1,0 +1,43 @@
+import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid } from 'recharts';
+import type { RiskSummary } from '../../types';
+
+interface Props {
+  riskSummary: RiskSummary[];
+}
+
+const formatAxis = (value: number) => {
+  if (value >= 100_000_000) return `${(value / 100_000_000).toFixed(0)}억`;
+  if (value >= 10_000) return `${(value / 10_000).toFixed(0)}만`;
+  return String(value);
+};
+
+const formatTooltip = (value: number) => {
+  return new Intl.NumberFormat('ko-KR').format(Math.round(value)) + '원';
+};
+
+export default function RiskBarChart({ riskSummary }: Props) {
+  const data = riskSummary.map(r => ({
+    name: r.risk_name,
+    공학: r.engineering_total,
+    보호구: r.ppe_total,
+    교육: r.education_total,
+  }));
+
+  return (
+    <div className="chart-card chart-wide">
+      <h3 className="chart-title">위험요인별 절감액</h3>
+      <ResponsiveContainer width="100%" height={400}>
+        <BarChart data={data} layout="vertical" margin={{ left: 100, right: 20, top: 10, bottom: 10 }}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis type="number" tickFormatter={formatAxis} />
+          <YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 12 }} />
+          <Tooltip formatter={formatTooltip} />
+          <Legend />
+          <Bar dataKey="공학" stackId="a" fill="#2563EB" />
+          <Bar dataKey="보호구" stackId="a" fill="#059669" />
+          <Bar dataKey="교육" stackId="a" fill="#F59E0B" />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
