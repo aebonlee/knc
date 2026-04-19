@@ -9,6 +9,7 @@ const Home = lazy(() => import('./pages/Home'));
 const CompanyList = lazy(() => import('./pages/CompanyList'));
 const CompanyDetail = lazy(() => import('./pages/CompanyDetail'));
 const RiskAnalysis = lazy(() => import('./pages/RiskAnalysis'));
+const Analytics = lazy(() => import('./pages/Analytics'));
 const Report = lazy(() => import('./pages/Report'));
 const Login = lazy(() => import('./pages/Login'));
 const NotFound = lazy(() => import('./pages/NotFound'));
@@ -29,6 +30,7 @@ function AppRoutes() {
         <Route path="/companies" element={<AuthGuard><CompanyList /></AuthGuard>} />
         <Route path="/companies/:id" element={<AuthGuard><CompanyDetail /></AuthGuard>} />
         <Route path="/risk-analysis" element={<AuthGuard><RiskAnalysis /></AuthGuard>} />
+        <Route path="/analytics" element={<AuthGuard><Analytics /></AuthGuard>} />
         <Route path="/report" element={<AuthGuard><Report /></AuthGuard>} />
         <Route path="*" element={<NotFound />} />
       </Routes>

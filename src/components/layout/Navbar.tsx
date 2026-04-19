@@ -18,6 +18,7 @@ export default function Navbar() {
     { path: '/', label: '대시보드' },
     { path: '/companies', label: '기업 관리' },
     { path: '/risk-analysis', label: '위험요인 분석' },
+    { path: '/analytics', label: '성과 분석' },
     { path: '/report', label: '보고서' },
   ];
 
