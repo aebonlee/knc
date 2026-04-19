@@ -1,24 +1,39 @@
 import { useState, useCallback } from 'react';
 import { supabase, TABLES } from '../../utils/supabase';
-import { getWeight, getDemandSaving, formatWon } from '../../hooks/useCompanyData';
+import { getWeight, formatWon } from '../../hooks/useCompanyData';
 import { ACTIVITY_TYPE_LABELS } from '../../data/referenceData';
-import type { ReferenceData, DemandCompany, Activity, ActivityType } from '../../types';
+import type { ReferenceData, DemandCompany, Activity, ActivityType, CompanyUnitPrice } from '../../types';
 
 interface Props {
   companyId: string;
   referenceData: ReferenceData[];
   demandCompanies: DemandCompany[];
   activities: Activity[];
+  month: string;
+  unitPrices: CompanyUnitPrice[];
   onChanged: () => void;
+  onUnitPriceChanged: () => void;
 }
 
 export default function ActivityInputTable({
-  companyId, referenceData, demandCompanies, activities, onChanged,
+  companyId, referenceData, demandCompanies, activities,
+  month, unitPrices, onChanged, onUnitPriceChanged,
 }: Props) {
   const [saving, setSaving] = useState<string | null>(null);
 
+  const monthDemands = demandCompanies.filter(d => d.month === month);
+  const monthActivities = activities.filter(a => a.month === month);
+
+  const getUnitPrice = (riskNo: number, type: ActivityType): number => {
+    const custom = unitPrices.find(u => u.risk_no === riskNo && u.activity_type === type);
+    if (custom) return custom.unit_price;
+    const ref = referenceData.find(r => r.no === riskNo);
+    if (!ref) return 0;
+    return ref.social_cost * getWeight(ref, type);
+  };
+
   const getActivityCount = (demandId: string, riskNo: number, type: ActivityType): number => {
-    const act = activities.find(
+    const act = monthActivities.find(
       a => a.demand_company_id === demandId && a.risk_no === riskNo && a.activity_type === type
     );
     return act?.activity_count ?? 0;
@@ -31,7 +46,7 @@ export default function ActivityInputTable({
     const key = `${demandId}-${riskNo}-${type}`;
     setSaving(key);
 
-    const existing = activities.find(
+    const existing = monthActivities.find(
       a => a.demand_company_id === demandId && a.risk_no === riskNo && a.activity_type === type
     );
 
@@ -47,6 +62,7 @@ export default function ActivityInputTable({
           risk_no: riskNo,
           activity_type: type,
           activity_count: count,
+          month,
         });
       }
       onChanged();
@@ -55,31 +71,49 @@ export default function ActivityInputTable({
     } finally {
       setSaving(null);
     }
-  }, [companyId, activities, onChanged]);
+  }, [companyId, monthActivities, month, onChanged]);
+
+  const updateUnitPrice = useCallback(async (riskNo: number, type: ActivityType, price: number) => {
+    if (!supabase) return;
+    const existing = unitPrices.find(u => u.risk_no === riskNo && u.activity_type === type);
+    try {
+      if (existing) {
+        await supabase.from(TABLES.company_unit_prices)
+          .update({ unit_price: price })
+          .eq('id', existing.id);
+      } else {
+        await supabase.from(TABLES.company_unit_prices).insert({
+          company_id: companyId,
+          risk_no: riskNo,
+          activity_type: type,
+          unit_price: price,
+        });
+      }
+      onUnitPriceChanged();
+    } catch (err) {
+      console.error(err);
+    }
+  }, [companyId, unitPrices, onUnitPriceChanged]);
 
   const activityTypes: ActivityType[] = ['engineering', 'ppe', 'education'];
 
-  if (demandCompanies.length === 0) {
+  if (monthDemands.length === 0) {
     return (
       <div className="activity-table-wrap">
-        <h4>활동 횟수 입력</h4>
+        <h4>활동 횟수 입력 <span className="text-muted" style={{ fontWeight: 400, fontSize: '0.8rem' }}>({month})</span></h4>
         <p className="text-muted">먼저 수요기업을 추가해주세요.</p>
       </div>
     );
   }
 
-  // 각 위험요인별 소계 계산
   const getRiskSubtotal = (riskNo: number, type: ActivityType) => {
-    const ref = referenceData.find(r => r.no === riskNo);
-    if (!ref) return 0;
-    const weight = getWeight(ref, type);
-    return demandCompanies.reduce((sum, dc) => {
+    const price = getUnitPrice(riskNo, type);
+    return monthDemands.reduce((sum, dc) => {
       const count = getActivityCount(dc.id, riskNo, type);
-      return sum + getDemandSaving(ref.social_cost, weight, count);
+      return sum + price * count;
     }, 0);
   };
 
-  // 전체 합계
   let grandTotal = 0;
   referenceData.forEach(ref => {
     activityTypes.forEach(type => {
@@ -89,7 +123,7 @@ export default function ActivityInputTable({
 
   return (
     <div className="activity-table-wrap">
-      <h4>활동 횟수 입력</h4>
+      <h4>활동 횟수 입력 <span className="text-muted" style={{ fontWeight: 400, fontSize: '0.8rem' }}>({month})</span></h4>
       <div className="activity-table-scroll">
         <table className="activity-table">
           <thead>
@@ -98,7 +132,7 @@ export default function ActivityInputTable({
               <th rowSpan={2}>위험요인</th>
               <th rowSpan={2}>활동유형</th>
               <th rowSpan={2}>1건당 절감단가</th>
-              {demandCompanies.map(dc => (
+              {monthDemands.map(dc => (
                 <th key={dc.id}>{dc.demand_name}</th>
               ))}
               <th rowSpan={2}>소계(원)</th>
@@ -107,8 +141,7 @@ export default function ActivityInputTable({
           <tbody>
             {referenceData.map(ref =>
               activityTypes.map((type, typeIdx) => {
-                const weight = getWeight(ref, type);
-                const unitSaving = ref.social_cost * weight;
+                const unitPrice = getUnitPrice(ref.no, type);
                 const rowSubtotal = getRiskSubtotal(ref.no, type);
 
                 return (
@@ -124,8 +157,18 @@ export default function ActivityInputTable({
                         {ACTIVITY_TYPE_LABELS[type]}
                       </span>
                     </td>
-                    <td className="cell-unit">{formatWon(unitSaving)}</td>
-                    {demandCompanies.map(dc => {
+                    <td className="cell-unit">
+                      <input
+                        type="number"
+                        className="unit-price-input"
+                        value={Math.round(unitPrice)}
+                        onChange={e => {
+                          const val = Math.max(0, Number(e.target.value));
+                          updateUnitPrice(ref.no, type, val);
+                        }}
+                      />
+                    </td>
+                    {monthDemands.map(dc => {
                       const count = getActivityCount(dc.id, ref.no, type);
                       const key = `${dc.id}-${ref.no}-${type}`;
                       return (
@@ -148,7 +191,7 @@ export default function ActivityInputTable({
           </tbody>
           <tfoot>
             <tr className="grand-total-row">
-              <td colSpan={3 + demandCompanies.length + 1} className="text-right">
+              <td colSpan={3 + monthDemands.length + 1} className="text-right">
                 <strong>전체 합계</strong>
               </td>
               <td className="cell-subtotal grand-total">

@@ -49,6 +49,7 @@ export interface DemandCompany {
   company_id: string;
   demand_no: number;
   demand_name: string;
+  month: string;
   created_at: string;
 }
 
@@ -59,6 +60,7 @@ export interface Activity {
   risk_no: number;
   activity_type: ActivityType;
   activity_count: number;
+  month: string;
   updated_at: string;
 }
 
@@ -74,6 +76,34 @@ export interface ProjectSettings {
 export interface CompanyWithSavings extends Company {
   total_saving: number;
   demand_companies: DemandCompany[];
+}
+
+export interface CompanyMonth {
+  id: string;
+  company_id: string;
+  month: string;
+  created_at: string;
+}
+
+export interface CompanyUnitPrice {
+  id: string;
+  company_id: string;
+  risk_no: number;
+  activity_type: ActivityType;
+  unit_price: number;
+}
+
+export interface ActivitySnapshot {
+  id: string;
+  company_id: string;
+  month: string;
+  snapshot: {
+    demand_companies: DemandCompany[];
+    activities: Activity[];
+    unit_prices: CompanyUnitPrice[];
+  };
+  description: string;
+  created_at: string;
 }
 
 export interface RiskSummary {

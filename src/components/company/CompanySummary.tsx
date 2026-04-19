@@ -4,9 +4,10 @@ import type { Company } from '../../types';
 interface Props {
   company: Company;
   totalSaving: number;
+  monthSaving?: number;
 }
 
-export default function CompanySummary({ company, totalSaving }: Props) {
+export default function CompanySummary({ company, totalSaving, monthSaving }: Props) {
   return (
     <div className="company-summary">
       <div className="summary-header">
@@ -16,10 +17,19 @@ export default function CompanySummary({ company, totalSaving }: Props) {
             {company.solution_type}
           </span>
         </div>
-        <div className="summary-total">
-          <span className="summary-label">총 절감액</span>
-          <span className="summary-value">{formatBillion(totalSaving)}</span>
-          <span className="summary-sub">{formatWon(totalSaving)}</span>
+        <div style={{ display: 'flex', gap: '24px' }}>
+          {monthSaving !== undefined && (
+            <div className="summary-total">
+              <span className="summary-label">당월 절감액</span>
+              <span className="summary-value" style={{ fontSize: '1.3rem' }}>{formatBillion(monthSaving)}</span>
+              <span className="summary-sub">{formatWon(monthSaving)}</span>
+            </div>
+          )}
+          <div className="summary-total">
+            <span className="summary-label">총 절감액 (전체 월)</span>
+            <span className="summary-value">{formatBillion(totalSaving)}</span>
+            <span className="summary-sub">{formatWon(totalSaving)}</span>
+          </div>
         </div>
       </div>
       <div className="summary-info">
