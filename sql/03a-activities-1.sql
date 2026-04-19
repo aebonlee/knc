@@ -873,3 +873,7 @@ FROM knc_companies c
 JOIN knc_demand_companies d ON d.company_id = c.id AND d.demand_no = 2
 WHERE c.company_no = 27;
 INSERT INTO knc_activities (company_id, demand_company_id, risk_no, activity_type, activity_count)
+SELECT c.id, d.id, 13, 'engineering', 1
+FROM knc_companies c
+JOIN knc_demand_companies d ON d.company_id = c.id AND d.demand_no = 1
+WHERE c.company_no = 27;
