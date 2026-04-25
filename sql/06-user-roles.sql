@@ -40,5 +40,5 @@ CREATE POLICY "knc_ur_superadmin_all"
 -- 5. 시드: 기존 3인 superadmin
 INSERT INTO knc_user_roles (user_id, role)
 SELECT id, 'superadmin' FROM auth.users
-WHERE email IN ('aebon@kakao.com','radical8566@gmail.com','aebon@kyonggi.ac.kr')
+WHERE email IN ('aebon@kakao.com','radical8566@gmail.com','aebon@kyonggi.ac.kr','sourcing.kim@gmail.com')
 ON CONFLICT (user_id) DO NOTHING;
