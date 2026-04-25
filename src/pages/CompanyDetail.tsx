@@ -74,19 +74,19 @@ export default function CompanyDetail() {
   const addMonth = async () => {
     if (!supabase || !id || !newMonth) return;
     setAddingMonth(true);
-    try {
-      await supabase.from(TABLES.company_months).insert({
-        company_id: id,
-        month: newMonth,
-      });
+    const { error } = await supabase.from(TABLES.company_months).insert({
+      company_id: id,
+      month: newMonth,
+    });
+    if (error) {
+      console.error('월 추가 실패:', error);
+      alert(error.message?.includes('duplicate') ? '이미 존재하는 월입니다.' : `월 추가 실패: ${error.message}`);
+    } else {
       setSelectedMonth(newMonth);
       setNewMonth('');
-      fetchData();
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setAddingMonth(false);
+      await fetchData();
     }
+    setAddingMonth(false);
   };
 
   const deleteMonth = async (month: string) => {

@@ -50,27 +50,24 @@ export default function ActivityInputTable({
       a => a.demand_company_id === demandId && a.risk_no === riskNo && a.activity_type === type
     );
 
-    try {
-      if (existing) {
-        await supabase.from(TABLES.activities)
-          .update({ activity_count: count, updated_at: new Date().toISOString() })
-          .eq('id', existing.id);
-      } else {
-        await supabase.from(TABLES.activities).insert({
-          company_id: companyId,
-          demand_company_id: demandId,
-          risk_no: riskNo,
-          activity_type: type,
-          activity_count: count,
-          month,
-        });
-      }
-      onChanged();
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setSaving(null);
+    if (existing) {
+      const { error } = await supabase.from(TABLES.activities)
+        .update({ activity_count: count, updated_at: new Date().toISOString() })
+        .eq('id', existing.id);
+      if (error) console.error('활동 수정 실패:', error);
+    } else {
+      const { error } = await supabase.from(TABLES.activities).insert({
+        company_id: companyId,
+        demand_company_id: demandId,
+        risk_no: riskNo,
+        activity_type: type,
+        activity_count: count,
+        month,
+      });
+      if (error) console.error('활동 추가 실패:', error);
     }
+    onChanged();
+    setSaving(null);
   }, [companyId, monthActivities, month, onChanged]);
 
   const updateUnitPrice = useCallback(async (riskNo: number, type: ActivityType, price: number) => {
