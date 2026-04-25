@@ -21,7 +21,16 @@ CREATE INDEX IF NOT EXISTS idx_knc_ur_company ON knc_user_roles(company_id);
 -- 3. RLS 활성화
 ALTER TABLE knc_user_roles ENABLE ROW LEVEL SECURITY;
 
--- 4. RLS 정책: 본인 SELECT + superadmin FULL
+-- 4. RLS 우회 헬퍼 함수 (SECURITY DEFINER로 무한 재귀 방지)
+CREATE OR REPLACE FUNCTION is_knc_superadmin()
+RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM knc_user_roles
+    WHERE user_id = auth.uid() AND role = 'superadmin'
+  );
+$$ LANGUAGE sql SECURITY DEFINER;
+
+-- 5. RLS 정책: 본인 SELECT + superadmin FULL
 CREATE POLICY "knc_ur_select_own"
   ON knc_user_roles FOR SELECT
   TO authenticated
@@ -30,12 +39,7 @@ CREATE POLICY "knc_ur_select_own"
 CREATE POLICY "knc_ur_superadmin_all"
   ON knc_user_roles FOR ALL
   TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM knc_user_roles
-      WHERE user_id = auth.uid() AND role = 'superadmin'
-    )
-  );
+  USING (is_knc_superadmin());
 
 -- 5. 시드: 기존 3인 superadmin
 INSERT INTO knc_user_roles (user_id, role)
