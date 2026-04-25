@@ -7,20 +7,44 @@ import site from '../../config/site';
 
 const COLOR_THEMES = site.colors as { name: string; color: string }[];
 
+const ROLE_BADGE: Record<string, { label: string; className: string }> = {
+  superadmin: { label: '총괄 관리자', className: 'role-badge role-badge-superadmin' },
+  manager: { label: '업무담당자', className: 'role-badge role-badge-manager' },
+  company_member: { label: '기업회원', className: 'role-badge role-badge-company' },
+};
+
 export default function Navbar() {
-  const { isLoggedIn, profile, isAdmin, signOut } = useAuth();
+  const { isLoggedIn, profile, isAdmin, kncRole, isSuperadmin, isCompanyMember, companyId, signOut } = useAuth();
   const { theme, colorTheme, toggleTheme, setColorTheme } = useTheme();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [colorOpen, setColorOpen] = useState(false);
 
-  const navItems = [
-    { path: '/', label: '대시보드' },
-    { path: '/companies', label: '기업 관리' },
-    { path: '/risk-analysis', label: '위험요인 분석' },
-    { path: '/analytics', label: '성과 분석' },
-    { path: '/report', label: '보고서' },
-  ];
+  // 역할별 내비게이션 아이템
+  const getNavItems = () => {
+    if (isCompanyMember && companyId) {
+      return [
+        { path: `/companies/${companyId}/dashboard`, label: '내 기업 대시보드' },
+        { path: '/about', label: '이용안내' },
+        { path: '/formulas', label: '산출기준' },
+      ];
+    }
+    const items = [
+      { path: '/', label: '대시보드' },
+      { path: '/companies', label: '기업 관리' },
+      { path: '/risk-analysis', label: '위험요인 분석' },
+      { path: '/analytics', label: '성과 분석' },
+      { path: '/report', label: '보고서' },
+      { path: '/about', label: '이용안내' },
+      { path: '/formulas', label: '산출기준' },
+    ];
+    if (isSuperadmin) {
+      items.push({ path: '/admin/users', label: '사용자 관리' });
+    }
+    return items;
+  };
+
+  const navItems = getNavItems();
 
   const externalLinks = [
     { href: 'https://safety.dreamitbiz.com/', label: '산업안전이란?' },
@@ -28,11 +52,13 @@ export default function Navbar() {
 
   const isActive = (path: string) => location.pathname === path;
 
+  const badge = kncRole ? ROLE_BADGE[kncRole] : null;
+
   return (
     <nav className="navbar">
       <div className="nav-container">
         <Link to="/" className="nav-brand">
-          <span className="brand-k">K&C</span>
+          <span className="brand-k">2026</span>
           <span className="brand-dash">산업안전 RBF</span>
         </Link>
 
@@ -101,7 +127,8 @@ export default function Navbar() {
                 <span className="user-name">
                   <FiUser size={14} />
                   {profile?.display_name || profile?.email?.split('@')[0] || '사용자'}
-                  {isAdmin && <span className="admin-badge">관리자</span>}
+                  {badge && <span className={badge.className}>{badge.label}</span>}
+                  {!badge && isAdmin && <span className="admin-badge">관리자</span>}
                 </span>
                 <button className="btn-logout" onClick={signOut}>
                   <FiLogOut size={16} />

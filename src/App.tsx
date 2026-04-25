@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import { lazy, Suspense, type ReactNode } from 'react';
+import type { KncRole } from './types';
 
 const Home = lazy(() => import('./pages/Home'));
 const CompanyList = lazy(() => import('./pages/CompanyList'));
@@ -13,25 +14,52 @@ const Analytics = lazy(() => import('./pages/Analytics'));
 const Report = lazy(() => import('./pages/Report'));
 const Login = lazy(() => import('./pages/Login'));
 const NotFound = lazy(() => import('./pages/NotFound'));
+const About = lazy(() => import('./pages/About'));
+const Formulas = lazy(() => import('./pages/Formulas'));
+const CompanyDashboard = lazy(() => import('./pages/CompanyDashboard'));
+const UserManagement = lazy(() => import('./pages/UserManagement'));
+
+const Loading = () => <div className="page-loading"><div className="spinner" /></div>;
 
 function AuthGuard({ children }: { children: ReactNode }) {
   const { isLoggedIn, loading } = useAuth();
-  if (loading) return <div className="page-loading"><div className="spinner" /></div>;
+  if (loading) return <Loading />;
   if (!isLoggedIn) return <Navigate to="/login" replace />;
   return <>{children}</>;
 }
 
+function RoleGuard({ allowed, children }: { allowed: KncRole[]; children: ReactNode }) {
+  const { isLoggedIn, loading, kncRole } = useAuth();
+  if (loading) return <Loading />;
+  if (!isLoggedIn) return <Navigate to="/login" replace />;
+  if (!kncRole || !allowed.includes(kncRole)) return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
+function HomeRedirect() {
+  const { loading, isCompanyMember, companyId } = useAuth();
+  if (loading) return <Loading />;
+  if (isCompanyMember && companyId) {
+    return <Navigate to={`/companies/${companyId}/dashboard`} replace />;
+  }
+  return <Home />;
+}
+
 function AppRoutes() {
   return (
-    <Suspense fallback={<div className="page-loading"><div className="spinner" /></div>}>
+    <Suspense fallback={<Loading />}>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/" element={<AuthGuard><Home /></AuthGuard>} />
+        <Route path="/about" element={<About />} />
+        <Route path="/formulas" element={<Formulas />} />
+        <Route path="/" element={<AuthGuard><HomeRedirect /></AuthGuard>} />
         <Route path="/companies" element={<AuthGuard><CompanyList /></AuthGuard>} />
         <Route path="/companies/:id" element={<AuthGuard><CompanyDetail /></AuthGuard>} />
+        <Route path="/companies/:id/dashboard" element={<AuthGuard><CompanyDashboard /></AuthGuard>} />
         <Route path="/risk-analysis" element={<AuthGuard><RiskAnalysis /></AuthGuard>} />
         <Route path="/analytics" element={<AuthGuard><Analytics /></AuthGuard>} />
         <Route path="/report" element={<AuthGuard><Report /></AuthGuard>} />
+        <Route path="/admin/users" element={<RoleGuard allowed={['superadmin']}><UserManagement /></RoleGuard>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>

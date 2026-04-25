@@ -4,11 +4,16 @@ import { useAuth } from '../contexts/AuthContext';
 import { signInWithGoogle, signInWithKakao } from '../utils/auth';
 
 export default function Login() {
-  const { isLoggedIn, loading } = useAuth();
+  const { isLoggedIn, loading, isCompanyMember, companyId } = useAuth();
   const [error, setError] = useState('');
 
   if (loading) return <div className="page-loading"><div className="spinner" /></div>;
-  if (isLoggedIn) return <Navigate to="/" replace />;
+  if (isLoggedIn) {
+    if (isCompanyMember && companyId) {
+      return <Navigate to={`/companies/${companyId}/dashboard`} replace />;
+    }
+    return <Navigate to="/" replace />;
+  }
 
   const handleSocialLogin = async (provider: 'google' | 'kakao') => {
     setError('');
@@ -148,7 +153,7 @@ export default function Login() {
             </svg>
           </div>
           <div className="login-header">
-            <h1><span className="brand-k">K&C</span> 산업안전 RBF</h1>
+            <h1><span className="brand-k">2026</span> 산업안전 RBF</h1>
             <p>사회비용 성과 대시보드</p>
           </div>
 

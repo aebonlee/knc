@@ -1,8 +1,8 @@
 const site = {
   id: 'knc',
   name: 'KNC Dashboard',
-  nameKo: 'K&C 산업안전 RBF 성과 대시보드',
-  description: 'K&C(한국남부발전 산업안전공단) 산업안전 RBF 사업의 50개 기업 통합 사회비용 절감액 관리 대시보드',
+  nameKo: '2026 산업안전 RBF 성과 대시보드',
+  description: '2026 산업안전 RBF 사업의 50개 기업 통합 사회비용 절감액 관리 대시보드',
   url: 'https://knc.dreamitbiz.com',
   dbPrefix: 'knc_',
   themeColor: '#0F2B5B',

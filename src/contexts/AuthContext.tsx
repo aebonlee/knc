@@ -1,8 +1,8 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import type { User } from '@supabase/supabase-js';
-import { supabase } from '../utils/supabase';
+import { supabase, TABLES } from '../utils/supabase';
 import { ADMIN_EMAILS } from '../config/admin';
-import type { UserProfile } from '../types';
+import type { UserProfile, KncRole, KncUserRole } from '../types';
 import site from '../config/site';
 
 interface AuthContextValue {
@@ -11,6 +11,13 @@ interface AuthContextValue {
   loading: boolean;
   isLoggedIn: boolean;
   isAdmin: boolean;
+  // KNC 역할 시스템
+  kncRole: KncRole | null;
+  companyId: string | null;
+  isSuperadmin: boolean;
+  isManager: boolean;
+  isCompanyMember: boolean;
+  canEdit: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -21,6 +28,12 @@ const AuthContext = createContext<AuthContextValue>({
   loading: true,
   isLoggedIn: false,
   isAdmin: false,
+  kncRole: null,
+  companyId: null,
+  isSuperadmin: false,
+  isManager: false,
+  isCompanyMember: false,
+  canEdit: false,
   signOut: async () => {},
   refreshProfile: async () => {},
 });
@@ -30,11 +43,13 @@ export const useAuth = () => useContext(AuthContext);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [kncUserRole, setKncUserRole] = useState<KncUserRole | null>(null);
   const [loading, setLoading] = useState(true);
 
   const loadProfile = useCallback(async (authUser: User) => {
     if (!supabase || !authUser) {
       setProfile(null);
+      setKncUserRole(null);
       return;
     }
 
@@ -83,6 +98,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setProfile(p);
     }
+
+    // 4) KNC 역할 조회
+    const { data: roleData } = await supabase
+      .from(TABLES.user_roles)
+      .select('*')
+      .eq('user_id', authUser.id)
+      .single();
+
+    if (roleData) {
+      setKncUserRole(roleData);
+    } else {
+      // ADMIN_EMAILS 폴백: DB에 역할 없으면 이메일로 superadmin 판단
+      if (ADMIN_EMAILS.includes(authUser.email || '')) {
+        setKncUserRole({
+          id: '',
+          user_id: authUser.id,
+          role: 'superadmin',
+          company_id: null,
+          created_at: new Date().toISOString(),
+        });
+      } else {
+        setKncUserRole(null);
+      }
+    }
   }, []);
 
   const refreshProfile = async () => {
@@ -113,6 +152,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loadProfile(u);
       } else {
         setProfile(null);
+        setKncUserRole(null);
       }
       setLoading(false);
     });
@@ -125,9 +165,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut({ scope: 'local' });
     setUser(null);
     setProfile(null);
+    setKncUserRole(null);
   };
 
   const isAdmin = !!user && ADMIN_EMAILS.includes(user.email || '');
+  const kncRole = kncUserRole?.role ?? null;
+  const companyId = kncUserRole?.company_id ?? null;
+  const isSuperadmin = kncRole === 'superadmin';
+  const isManager = kncRole === 'manager';
+  const isCompanyMember = kncRole === 'company_member';
+  const canEdit = isSuperadmin || isManager;
 
   return (
     <AuthContext.Provider
@@ -135,6 +182,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user, profile, loading,
         isLoggedIn: !!user,
         isAdmin,
+        kncRole, companyId,
+        isSuperadmin, isManager, isCompanyMember, canEdit,
         signOut: handleSignOut,
         refreshProfile,
       }}

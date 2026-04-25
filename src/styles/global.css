@@ -1,5 +1,5 @@
 /* =====================================================
-   K&C 산업안전 RBF 대시보드 — Global Styles
+   2026 산업안전 RBF 대시보드 — Global Styles
    ===================================================== */
 
 :root {
@@ -2224,4 +2224,367 @@ th:last-child .formula-balloon::after,
   font-size: 11px;
   min-width: 180px;
   padding: 8px 12px;
+}
+
+/* =====================================================
+   Role Badges
+   ===================================================== */
+.role-badge {
+  font-size: 0.65rem;
+  padding: 1px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.role-badge-superadmin { background: #DC2626; color: white; }
+.role-badge-manager { background: #2563EB; color: white; }
+.role-badge-company { background: #059669; color: white; }
+
+.role-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+/* =====================================================
+   User Management Page
+   ===================================================== */
+.user-mgmt-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.user-add-form {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+
+.user-add-form .form-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.form-input, .form-select {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.form-input { flex: 1; min-width: 200px; }
+.form-select { min-width: 140px; }
+.form-error { color: var(--danger); font-size: 0.85rem; margin-top: 8px; }
+
+.user-table-wrap {
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.data-table th {
+  text-align: left;
+  padding: 12px 14px;
+  background: var(--border-light);
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  border-bottom: 2px solid var(--border);
+}
+
+.data-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.data-table code {
+  background: var(--border-light);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.table-empty {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 40px !important;
+}
+
+.role-select, .company-select {
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.8rem;
+}
+
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-danger-icon:hover { border-color: var(--danger); color: var(--danger); background: var(--danger-bg); }
+
+.text-muted { color: var(--text-muted); }
+
+/* =====================================================
+   About Page
+   ===================================================== */
+.about-page .about-section {
+  margin-bottom: 40px;
+}
+
+.about-page .about-section h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.about-intro-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+}
+
+.about-intro-card p { margin-bottom: 12px; line-height: 1.8; }
+
+.about-intro-card ul {
+  list-style: disc;
+  padding-left: 24px;
+}
+
+.about-intro-card li {
+  margin-bottom: 6px;
+  color: var(--text-secondary);
+}
+
+.about-menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.about-menu-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+
+.about-menu-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+
+.about-menu-icon {
+  width: 40px;
+  height: 40px;
+  background: var(--primary-bg);
+  color: var(--primary);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.about-menu-card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 6px; }
+.about-menu-card p { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6; }
+
+.about-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.about-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+}
+
+.step-number {
+  width: 36px;
+  height: 36px;
+  background: var(--primary);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+
+.step-content h4 { font-size: 0.95rem; font-weight: 600; margin-bottom: 4px; }
+.step-content p { font-size: 0.85rem; color: var(--text-secondary); }
+
+.about-role-table { max-width: 700px; }
+
+.about-cta {
+  background: var(--primary-bg);
+  border-radius: var(--radius);
+  padding: 28px;
+  text-align: center;
+}
+
+.about-cta h2 { justify-content: center; }
+.about-cta p { color: var(--text-secondary); margin-bottom: 16px; }
+
+/* =====================================================
+   Formulas Page
+   ===================================================== */
+.formulas-page .formula-section {
+  margin-bottom: 40px;
+}
+
+.formulas-page .formula-section h2 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.formula-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.formula-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.formula-card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 10px; color: var(--primary); }
+
+.formula-expression {
+  font-family: 'Pretendard', monospace;
+  background: var(--primary-bg);
+  padding: 10px 14px;
+  border-radius: var(--radius-xs);
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.formula-example {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.calculator-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+}
+
+.calc-inputs {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.calc-field { display: flex; flex-direction: column; gap: 6px; min-width: 180px; }
+.calc-field label { font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); }
+
+.calc-field select,
+.calc-field input {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.calc-result {
+  background: var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 16px 20px;
+}
+
+.calc-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  font-size: 0.9rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.calc-row:last-child { border-bottom: none; }
+
+.calc-total {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--primary);
+  border-top: 2px solid var(--primary);
+  padding-top: 12px;
+  margin-top: 4px;
+}
+
+/* Company Dashboard extras */
+.page-top-right {
+  display: flex;
+  gap: 8px;
+}
+
+/* =====================================================
+   Responsive: New pages
+   ===================================================== */
+@media (max-width: 768px) {
+  .about-menu-grid { grid-template-columns: 1fr; }
+  .formula-cards { grid-template-columns: 1fr; }
+  .calc-inputs { flex-direction: column; }
+  .user-add-form .form-row { flex-direction: column; }
+  .form-input, .form-select { min-width: 100%; }
 }

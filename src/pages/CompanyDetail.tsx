@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, Navigate } from 'react-router-dom';
 import { FiArrowLeft, FiEdit2, FiPlus, FiTrash2, FiSave } from 'react-icons/fi';
 import { supabase, TABLES } from '../utils/supabase';
 import { DEFAULT_REFERENCE_DATA } from '../data/referenceData';
 import { getCompanyTotal } from '../hooks/useCompanyData';
+import { useAuth } from '../contexts/AuthContext';
 import CompanySummary from '../components/company/CompanySummary';
 import CompanyForm from '../components/company/CompanyForm';
 import DemandCompanyManager from '../components/company/DemandCompanyManager';
@@ -16,6 +17,12 @@ import type {
 
 export default function CompanyDetail() {
   const { id } = useParams<{ id: string }>();
+  const { isCompanyMember, companyId } = useAuth();
+
+  // company_member가 다른 기업 접근 시 리다이렉트
+  if (isCompanyMember && companyId && id !== companyId) {
+    return <Navigate to={`/companies/${companyId}/dashboard`} replace />;
+  }
   const [company, setCompany] = useState<Company | null>(null);
   const [demandCompanies, setDemandCompanies] = useState<DemandCompany[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);

@@ -114,3 +114,14 @@ export interface RiskSummary {
   education_total: number;
   total_saving: number;
 }
+
+// 3단계 회원 권한
+export type KncRole = 'superadmin' | 'manager' | 'company_member';
+
+export interface KncUserRole {
+  id: string;
+  user_id: string;
+  role: KncRole;
+  company_id: string | null;
+  created_at: string;
+}

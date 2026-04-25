@@ -30,7 +30,7 @@ export default function PdfReport({
 
       <div ref={reportRef} className="pdf-report">
         <div className="report-header">
-          <h1>K&C 산업안전 RBF 사회비용 성과 보고서</h1>
+          <h1>2026 산업안전 RBF 사회비용 성과 보고서</h1>
           <p className="report-date">생성일: {new Date().toLocaleDateString('ko-KR')}</p>
           <p className="report-phase">{settings.project_phase}</p>
         </div>
