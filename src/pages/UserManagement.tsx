@@ -23,6 +23,9 @@ interface PendingUser {
 
 type Tab = 'assigned' | 'pending';
 
+// 개발자 계정 — 사용자 관리 목록에서 숨김
+const HIDDEN_EMAILS = ['aebon@kakao.com', 'aebon@kyonggi.ac.kr'];
+
 export default function UserManagement() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
@@ -204,13 +207,15 @@ export default function UserManagement() {
   };
 
   const filteredAssigned = users.filter(u =>
-    u.email.toLowerCase().includes(search.toLowerCase()) ||
-    u.display_name.toLowerCase().includes(search.toLowerCase())
+    !HIDDEN_EMAILS.includes(u.email) &&
+    (u.email.toLowerCase().includes(search.toLowerCase()) ||
+    u.display_name.toLowerCase().includes(search.toLowerCase()))
   );
 
   const filteredPending = pendingUsers.filter(u =>
-    u.email.toLowerCase().includes(search.toLowerCase()) ||
-    (u.display_name || '').toLowerCase().includes(search.toLowerCase())
+    !HIDDEN_EMAILS.includes(u.email) &&
+    (u.email.toLowerCase().includes(search.toLowerCase()) ||
+    (u.display_name || '').toLowerCase().includes(search.toLowerCase()))
   );
 
   if (loading) return <div className="page-loading"><div className="spinner" /></div>;
