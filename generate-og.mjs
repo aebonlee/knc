@@ -32,8 +32,8 @@ const svg = `
   <!-- Left accent bar -->
   <rect x="80" y="160" width="5" height="120" fill="url(#accent)" rx="3"/>
 
-  <!-- Main title: K&C -->
-  <text x="110" y="215" font-family="Arial, Helvetica, sans-serif" font-size="72" font-weight="900" fill="#3B82F6">K&amp;C</text>
+  <!-- Main title: 2026 -->
+  <text x="110" y="215" font-family="Arial, Helvetica, sans-serif" font-size="72" font-weight="900" fill="#3B82F6">2026</text>
 
   <!-- Subtitle -->
   <text x="110" y="270" font-family="Arial, Helvetica, sans-serif" font-size="36" font-weight="700" fill="#F1F5F9">산업안전 RBF</text>
