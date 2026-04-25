@@ -17,6 +17,7 @@ interface AuthContextValue {
   isSuperadmin: boolean;
   isManager: boolean;
   isCompanyMember: boolean;
+  isPending: boolean;
   canEdit: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -33,6 +34,7 @@ const AuthContext = createContext<AuthContextValue>({
   isSuperadmin: false,
   isManager: false,
   isCompanyMember: false,
+  isPending: false,
   canEdit: false,
   signOut: async () => {},
   refreshProfile: async () => {},
@@ -174,6 +176,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isSuperadmin = kncRole === 'superadmin';
   const isManager = kncRole === 'manager';
   const isCompanyMember = kncRole === 'company_member';
+  const isPending = !!user && !loading && !kncRole;
   const canEdit = isSuperadmin || isManager;
 
   return (
@@ -183,7 +186,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoggedIn: !!user,
         isAdmin,
         kncRole, companyId,
-        isSuperadmin, isManager, isCompanyMember, canEdit,
+        isSuperadmin, isManager, isCompanyMember, isPending, canEdit,
         signOut: handleSignOut,
         refreshProfile,
       }}

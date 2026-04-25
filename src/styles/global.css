@@ -2579,6 +2579,171 @@ th:last-child .formula-balloon::after,
 }
 
 /* =====================================================
+   Pending Approval Page
+   ===================================================== */
+.pending-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - var(--nav-height) - 44px);
+  padding: 24px;
+}
+
+.pending-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 48px 40px;
+  max-width: 520px;
+  width: 100%;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+}
+
+.pending-icon {
+  color: var(--warning);
+  margin-bottom: 20px;
+}
+
+.pending-card h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.pending-desc {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+
+.pending-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.pending-info-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.pending-status-badge {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+
+.pending-notice {
+  background: var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  text-align: left;
+  margin-bottom: 28px;
+}
+
+.pending-notice h3 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.pending-notice ul {
+  list-style: disc;
+  padding-left: 20px;
+}
+
+.pending-notice li {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  line-height: 1.6;
+}
+
+.pending-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+/* =====================================================
+   Role Badge: Pending
+   ===================================================== */
+.role-badge-pending { background: var(--warning); color: white; }
+
+/* =====================================================
+   User Management Tabs
+   ===================================================== */
+.user-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid var(--border);
+}
+
+.user-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border: none;
+  background: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: var(--transition);
+}
+
+.user-tab:hover { color: var(--text); }
+
+.user-tab.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  font-weight: 600;
+}
+
+.tab-count {
+  font-size: 0.7rem;
+  padding: 1px 7px;
+  border-radius: 10px;
+  background: var(--border-light);
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.tab-count-pending {
+  background: var(--warning);
+  color: white;
+}
+
+/* Inline approve UI */
+.approve-inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.btn-xs {
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  border-radius: var(--radius-xs);
+}
+
+/* =====================================================
    Responsive: New pages
    ===================================================== */
 @media (max-width: 768px) {
@@ -2587,4 +2752,7 @@ th:last-child .formula-balloon::after,
   .calc-inputs { flex-direction: column; }
   .user-add-form .form-row { flex-direction: column; }
   .form-input, .form-select { min-width: 100%; }
+  .pending-card { padding: 32px 20px; }
+  .pending-actions { flex-direction: column; }
+  .approve-inline { flex-direction: column; align-items: flex-start; }
 }

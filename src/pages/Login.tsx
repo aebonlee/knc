@@ -4,11 +4,12 @@ import { useAuth } from '../contexts/AuthContext';
 import { signInWithGoogle, signInWithKakao } from '../utils/auth';
 
 export default function Login() {
-  const { isLoggedIn, loading, isCompanyMember, companyId } = useAuth();
+  const { isLoggedIn, loading, isCompanyMember, isPending, companyId } = useAuth();
   const [error, setError] = useState('');
 
   if (loading) return <div className="page-loading"><div className="spinner" /></div>;
   if (isLoggedIn) {
+    if (isPending) return <Navigate to="/pending" replace />;
     if (isCompanyMember && companyId) {
       return <Navigate to={`/companies/${companyId}/dashboard`} replace />;
     }

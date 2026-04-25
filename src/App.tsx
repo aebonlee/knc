@@ -18,21 +18,32 @@ const About = lazy(() => import('./pages/About'));
 const Formulas = lazy(() => import('./pages/Formulas'));
 const CompanyDashboard = lazy(() => import('./pages/CompanyDashboard'));
 const UserManagement = lazy(() => import('./pages/UserManagement'));
+const PendingApproval = lazy(() => import('./pages/PendingApproval'));
 
 const Loading = () => <div className="page-loading"><div className="spinner" /></div>;
 
 function AuthGuard({ children }: { children: ReactNode }) {
-  const { isLoggedIn, loading } = useAuth();
+  const { isLoggedIn, loading, isPending } = useAuth();
   if (loading) return <Loading />;
   if (!isLoggedIn) return <Navigate to="/login" replace />;
+  if (isPending) return <Navigate to="/pending" replace />;
   return <>{children}</>;
 }
 
 function RoleGuard({ allowed, children }: { allowed: KncRole[]; children: ReactNode }) {
-  const { isLoggedIn, loading, kncRole } = useAuth();
+  const { isLoggedIn, loading, kncRole, isPending } = useAuth();
   if (loading) return <Loading />;
   if (!isLoggedIn) return <Navigate to="/login" replace />;
+  if (isPending) return <Navigate to="/pending" replace />;
   if (!kncRole || !allowed.includes(kncRole)) return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
+function PendingGuard({ children }: { children: ReactNode }) {
+  const { isLoggedIn, loading, isPending } = useAuth();
+  if (loading) return <Loading />;
+  if (!isLoggedIn) return <Navigate to="/login" replace />;
+  if (!isPending) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
@@ -50,6 +61,7 @@ function AppRoutes() {
     <Suspense fallback={<Loading />}>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/pending" element={<PendingGuard><PendingApproval /></PendingGuard>} />
         <Route path="/about" element={<About />} />
         <Route path="/formulas" element={<Formulas />} />
         <Route path="/" element={<AuthGuard><HomeRedirect /></AuthGuard>} />

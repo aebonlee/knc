@@ -14,7 +14,7 @@ const ROLE_BADGE: Record<string, { label: string; className: string }> = {
 };
 
 export default function Navbar() {
-  const { isLoggedIn, profile, isAdmin, kncRole, isSuperadmin, isCompanyMember, companyId, signOut } = useAuth();
+  const { isLoggedIn, profile, isAdmin, kncRole, isSuperadmin, isCompanyMember, isPending, companyId, signOut } = useAuth();
   const { theme, colorTheme, toggleTheme, setColorTheme } = useTheme();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -22,9 +22,17 @@ export default function Navbar() {
 
   // 역할별 내비게이션 아이템
   const getNavItems = () => {
+    // 승인 대기 중이면 공개 메뉴만
+    if (isPending) {
+      return [
+        { path: '/about', label: '이용안내' },
+        { path: '/formulas', label: '산출기준' },
+      ];
+    }
     if (isCompanyMember && companyId) {
       return [
         { path: `/companies/${companyId}/dashboard`, label: '내 기업 대시보드' },
+        { path: `/companies/${companyId}`, label: '데이터 입력' },
         { path: '/about', label: '이용안내' },
         { path: '/formulas', label: '산출기준' },
       ];
@@ -52,7 +60,9 @@ export default function Navbar() {
 
   const isActive = (path: string) => location.pathname === path;
 
-  const badge = kncRole ? ROLE_BADGE[kncRole] : null;
+  const badge = isPending
+    ? { label: '승인대기', className: 'role-badge role-badge-pending' }
+    : kncRole ? ROLE_BADGE[kncRole] : null;
 
   return (
     <nav className="navbar">
