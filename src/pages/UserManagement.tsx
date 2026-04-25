@@ -234,8 +234,8 @@ export default function UserManagement() {
           onClick={() => setTab('pending')}
         >
           승인대기
-          {pendingUsers.length > 0 && (
-            <span className="tab-count tab-count-pending">{pendingUsers.length}</span>
+          {filteredPending.length > 0 && (
+            <span className="tab-count tab-count-pending">{filteredPending.length}</span>
           )}
         </button>
         <button
@@ -243,7 +243,7 @@ export default function UserManagement() {
           onClick={() => setTab('assigned')}
         >
           배정완료
-          <span className="tab-count">{users.length}</span>
+          <span className="tab-count">{filteredAssigned.length}</span>
         </button>
       </div>
 
