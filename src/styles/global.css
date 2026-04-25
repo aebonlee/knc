@@ -380,6 +380,30 @@ a { color: inherit; text-decoration: none; }
   overflow: hidden;
 }
 
+/* 뷰 전환 셀렉터 */
+.dashboard-view-selector {
+  flex-shrink: 0;
+  margin-bottom: 10px;
+}
+
+.view-select {
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: var(--bg-card);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  min-width: 240px;
+}
+
+.page-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
 .dashboard-fit .page-header {
   margin-bottom: 14px;
   flex-shrink: 0;
