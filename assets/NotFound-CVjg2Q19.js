@@ -1,1 +1,0 @@
-import{j as s,L as n}from"./index-BVvGnvRK.js";function t(){return s.jsxs("div",{className:"not-found",children:[s.jsx("h1",{children:"404"}),s.jsx("p",{children:"페이지를 찾을 수 없습니다"}),s.jsx(n,{to:"/",className:"btn-primary",children:"대시보드로 돌아가기"})]})}export{t as default};
