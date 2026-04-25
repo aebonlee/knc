@@ -35,9 +35,9 @@ export const getCompanyTotal = (activities: Activity[], refData: ReferenceData[]
   }, 0);
 };
 
-// 성과 판정
+// 성과 판정 (달성률 = 총 절감액 ÷ 최대 성과목표 × 100)
 export const getPerformanceResult = (totalSaving: number, settings: ProjectSettings) => {
-  const rate = totalSaving / settings.total_investment * 100;
+  const rate = totalSaving / settings.max_target * 100;
   if (totalSaving >= settings.max_target) return { label: '최대 성과목표 달성', color: '#059669', rate };
   if (totalSaving > settings.underperformance_threshold) return { label: '성과 달성', color: '#2563EB', rate };
   return { label: '성과 미달', color: '#DC2626', rate };

@@ -31,7 +31,13 @@ export default function SavingsChart({ savingsByType }: Props) {
 
   return (
     <>
-      <h3 className="chart-title">활동유형별 절감액</h3>
+      <h3 className="chart-title">
+        활동유형별 절감액
+        <span className="formula-tooltip-wrap">
+          <span className="formula-icon">?</span>
+          <span className="formula-balloon">= 사회비용 × 유형별 가중치 × 활동횟수{'\n'}(공학 0.70 / 보호구 0.15 / 교육 0.15)</span>
+        </span>
+      </h3>
       <div className="chart-fill">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>

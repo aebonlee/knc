@@ -20,13 +20,25 @@ export default function CompanySummary({ company, totalSaving, monthSaving }: Pr
         <div style={{ display: 'flex', gap: '24px' }}>
           {monthSaving !== undefined && (
             <div className="summary-total">
-              <span className="summary-label">당월 절감액</span>
+              <span className="summary-label">
+                당월 절감액
+                <span className="formula-tooltip-wrap">
+                  <span className="formula-icon">?</span>
+                  <span className="formula-balloon">= Σ (절감단가 × 해당월 활동횟수)</span>
+                </span>
+              </span>
               <span className="summary-value" style={{ fontSize: '1.3rem' }}>{formatBillion(monthSaving)}</span>
               <span className="summary-sub">{formatWon(monthSaving)}</span>
             </div>
           )}
           <div className="summary-total">
-            <span className="summary-label">총 절감액 (전체 월)</span>
+            <span className="summary-label">
+              총 절감액 (전체 월)
+              <span className="formula-tooltip-wrap">
+                <span className="formula-icon">?</span>
+                <span className="formula-balloon">= Σ (사회비용 × 가중치 × 활동횟수){'\n'}모든 월의 모든 활동 합산</span>
+              </span>
+            </span>
             <span className="summary-value">{formatBillion(totalSaving)}</span>
             <span className="summary-sub">{formatWon(totalSaving)}</span>
           </div>

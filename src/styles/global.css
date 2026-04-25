@@ -2120,3 +2120,108 @@ html[data-theme="dark"] .google-btn:hover:not(:disabled) { background: #3C3C3C; 
   color: var(--danger);
   background: var(--danger-bg);
 }
+
+/* =====================================================
+   Formula Tooltip (풍선 도움말)
+   ===================================================== */
+.formula-tooltip-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.formula-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--border);
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 700;
+  cursor: help;
+  flex-shrink: 0;
+  transition: var(--transition);
+  line-height: 1;
+}
+
+.formula-tooltip-wrap:hover .formula-icon {
+  background: var(--primary);
+  color: white;
+}
+
+.formula-balloon {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--primary-dark, #091D3E);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.6;
+  padding: 10px 14px;
+  border-radius: var(--radius-xs);
+  white-space: pre-line;
+  min-width: 200px;
+  max-width: 320px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  z-index: 100;
+  pointer-events: none;
+  text-align: left;
+}
+
+.formula-balloon::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--primary-dark, #091D3E);
+}
+
+.formula-tooltip-wrap:hover .formula-balloon {
+  display: block;
+  animation: tooltipFadeIn 0.15s ease;
+}
+
+/* 오른쪽 끝 요소는 왼쪽으로 정렬 */
+th:last-child .formula-balloon,
+.text-right .formula-balloon,
+.summary-total .formula-balloon {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+
+th:last-child .formula-balloon::after,
+.text-right .formula-balloon::after,
+.summary-total .formula-balloon::after {
+  left: auto;
+  right: 12px;
+  transform: none;
+}
+
+@keyframes tooltipFadeIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(4px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* 대시보드 축소 레이아웃에서 아이콘 크기 조정 */
+.dashboard-fit .formula-icon {
+  width: 14px;
+  height: 14px;
+  font-size: 9px;
+}
+
+.dashboard-fit .formula-balloon {
+  font-size: 11px;
+  min-width: 180px;
+  padding: 8px 12px;
+}

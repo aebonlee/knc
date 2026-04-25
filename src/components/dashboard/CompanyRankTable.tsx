@@ -11,7 +11,13 @@ export default function CompanyRankTable({ companies }: Props) {
 
   return (
     <>
-      <h3 className="chart-title">절감액 Top 10 기업</h3>
+      <h3 className="chart-title">
+        절감액 Top 10 기업
+        <span className="formula-tooltip-wrap">
+          <span className="formula-icon">?</span>
+          <span className="formula-balloon">기업별 절감액 = Σ (사회비용 × 가중치 × 활동횟수){'\n'}전체 활동의 절감액 합계 기준 상위 10개</span>
+        </span>
+      </h3>
       {sorted.length === 0 ? (
         <div className="chart-empty">등록된 기업이 없습니다</div>
       ) : (

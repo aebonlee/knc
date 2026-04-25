@@ -131,11 +131,23 @@ export default function ActivityInputTable({
               <th rowSpan={2}>No</th>
               <th rowSpan={2}>위험요인</th>
               <th rowSpan={2}>활동유형</th>
-              <th rowSpan={2}>1건당 절감단가</th>
+              <th rowSpan={2}>
+                1건당 절감단가
+                <span className="formula-tooltip-wrap">
+                  <span className="formula-icon">?</span>
+                  <span className="formula-balloon">= 사회비용 × 가중치{'\n'}(공학 0.70 / 보호구 0.15 / 교육 0.15)</span>
+                </span>
+              </th>
               {monthDemands.map(dc => (
                 <th key={dc.id}>{dc.demand_name}</th>
               ))}
-              <th rowSpan={2}>소계(원)</th>
+              <th rowSpan={2}>
+                소계(원)
+                <span className="formula-tooltip-wrap">
+                  <span className="formula-icon">?</span>
+                  <span className="formula-balloon">= 절감단가 × Σ 수요기업 활동횟수</span>
+                </span>
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -192,7 +204,13 @@ export default function ActivityInputTable({
           <tfoot>
             <tr className="grand-total-row">
               <td colSpan={3 + monthDemands.length + 1} className="text-right">
-                <strong>전체 합계</strong>
+                <strong>
+                  전체 합계
+                  <span className="formula-tooltip-wrap" style={{ marginLeft: 4 }}>
+                    <span className="formula-icon">?</span>
+                    <span className="formula-balloon">= Σ (13개 위험요인 × 3개 활동유형 소계)</span>
+                  </span>
+                </strong>
               </td>
               <td className="cell-subtotal grand-total">
                 <strong>{formatWon(grandTotal)}</strong>

@@ -25,7 +25,13 @@ export default function RiskBarChart({ riskSummary }: Props) {
 
   return (
     <>
-      <h3 className="chart-title">위험요인별 절감액</h3>
+      <h3 className="chart-title">
+        위험요인별 절감액
+        <span className="formula-tooltip-wrap">
+          <span className="formula-icon">?</span>
+          <span className="formula-balloon">= 위험요인 사회비용 × 가중치 × Σ 활동횟수{'\n'}(13개 위험요인별 공학/보호구/교육 합산)</span>
+        </span>
+      </h3>
       <div className="chart-fill">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} layout="vertical" margin={{ left: 80, right: 16, top: 8, bottom: 8 }}>
