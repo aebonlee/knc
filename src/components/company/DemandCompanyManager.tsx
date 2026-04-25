@@ -22,9 +22,9 @@ export default function DemandCompanyManager({ companyId, demandCompanies, month
     setAdding(true);
     setError(null);
 
-    // 현재 월 기준으로 다음 번호 계산
-    const nextNo = monthDemands.length > 0
-      ? Math.max(...monthDemands.map(d => d.demand_no)) + 1
+    // 전체 월 통합 기준으로 다음 번호 계산 (UNIQUE 충돌 방지)
+    const nextNo = demandCompanies.length > 0
+      ? Math.max(...demandCompanies.map(d => d.demand_no)) + 1
       : 1;
 
     const { error: insertError } = await supabase.from(TABLES.demand_companies).insert({
