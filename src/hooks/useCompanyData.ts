@@ -78,7 +78,7 @@ const DEFAULT_SETTINGS: ProjectSettings = {
   updated_at: new Date().toISOString(),
 };
 
-export function useCompanyData(phaseFilter?: number, monthFilter?: string) {
+export function useCompanyData(phaseFilter?: number, monthFilter?: string[]) {
   const [allCompanies, setAllCompanies] = useState<Company[]>([]);
   const [allDemandCompanies, setAllDemandCompanies] = useState<DemandCompany[]>([]);
   const [allActivities, setAllActivities] = useState<Activity[]>([]);
@@ -130,14 +130,15 @@ export function useCompanyData(phaseFilter?: number, monthFilter?: string) {
     allActivities.filter(a => companyIds.has(a.company_id)).map(a => a.month).filter(Boolean)
   )].sort();
 
-  // 월 필터 적용
-  const demandCompanies = monthFilter
-    ? demandCompaniesAll.filter(d => d.month === monthFilter)
+  // 월 필터 적용 (배열: 선택된 월이 없으면 전체)
+  const hasMonthFilter = monthFilter && monthFilter.length > 0;
+  const monthSet = hasMonthFilter ? new Set(monthFilter) : null;
+  const demandCompanies = monthSet
+    ? demandCompaniesAll.filter(d => monthSet.has(d.month))
     : demandCompaniesAll;
-  const demandCompanyIds = monthFilter ? new Set(demandCompanies.map(d => d.id)) : null;
   const activities = allActivities.filter(a => {
     if (!companyIds.has(a.company_id)) return false;
-    if (monthFilter && a.month !== monthFilter) return false;
+    if (monthSet && !monthSet.has(a.month)) return false;
     return true;
   });
 

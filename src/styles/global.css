@@ -469,9 +469,96 @@ a { color: inherit; text-decoration: none; }
   box-shadow: var(--shadow-sm);
 }
 
-.dash-month-select {
-  min-width: 130px;
-  font-weight: 500;
+/* 대시보드 다중 월 선택 */
+.dash-month-multi {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.dash-month-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: var(--bg-card);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  min-width: 140px;
+  transition: var(--transition);
+}
+
+.dash-month-trigger:hover {
+  border-color: var(--primary);
+}
+
+.dash-month-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 280px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  z-index: 50;
+}
+
+.dash-month-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.dash-month-quick button {
+  padding: 3px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.dash-month-quick button:hover {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.dash-month-list {
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.dash-month-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  font-size: 0.84rem;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.dash-month-item:hover {
+  background: var(--primary-bg);
+}
+
+.dash-month-item input[type="checkbox"] {
+  accent-color: var(--primary);
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
 }
 
 .page-header-row {
@@ -2014,7 +2101,8 @@ html[data-theme="dark"] .google-btn:hover:not(:disabled) { background: #3C3C3C; 
   .analytics-filter-bar { flex-direction: column; }
   .analytics-type-filter { flex-wrap: wrap; }
   .dashboard-filter-bar { flex-wrap: wrap; }
-  .dash-month-select { min-width: 100%; }
+  .dash-month-multi { width: 100%; }
+  .dash-month-trigger { width: 100%; }
 
   .summary-header { flex-direction: column; gap: 12px; }
   .summary-total { align-items: flex-start; }
