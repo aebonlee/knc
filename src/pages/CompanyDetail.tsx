@@ -236,6 +236,24 @@ export default function CompanyDetail() {
     }
   };
 
+  // 제출 취소 (검토대기 상태에서만)
+  const cancelSubmission = async () => {
+    if (!supabase || !selectedMonth) return;
+    const sub = submissions.find(s => s.month === selectedMonth && s.status === 'submitted');
+    if (!sub) return;
+    setSubmitting(true);
+    try {
+      await supabase.from(TABLES.submissions).delete().eq('id', sub.id);
+      alert(`${selectedMonth} 제출이 취소되었습니다. 데이터를 수정한 후 다시 제출할 수 있습니다.`);
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      alert('제출 취소 중 오류가 발생했습니다.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const deleteSnapshot = async (snapshotId: string) => {
     if (!supabase) return;
     try {
@@ -447,6 +465,8 @@ export default function CompanyDetail() {
             submission={currentSubmission}
             submitting={submitting}
             onSubmit={submitForReview}
+            cancelling={submitting}
+            onCancel={cancelSubmission}
           />
         </div>
       ) : (

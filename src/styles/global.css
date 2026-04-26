@@ -3295,6 +3295,27 @@ th:last-child .formula-balloon::after,
 .snap-submit-btn:hover:not(:disabled) { background: #047857; }
 .snap-submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
+.snap-cancel-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  background: var(--bg-card);
+  color: var(--danger);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-xs);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+.snap-cancel-btn:hover:not(:disabled) {
+  background: var(--danger);
+  color: #fff;
+}
+.snap-cancel-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
 .snap-submission-banner {
   display: flex;
   align-items: center;

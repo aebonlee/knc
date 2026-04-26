@@ -28,6 +28,8 @@ interface Props {
   submission?: Submission | null;
   submitting?: boolean;
   onSubmit?: (evidenceLinks: EvidenceLink[]) => void;
+  cancelling?: boolean;
+  onCancel?: () => void;
 }
 
 function getSnapshotStats(snap: ActivitySnapshot, refData: ReferenceData[]) {
@@ -52,7 +54,7 @@ function formatDateTime(iso: string) {
 
 export default function SnapshotPanel({
   snapshots, month, referenceData, saving, onSave, onRestore, onDelete,
-  submission, submitting, onSubmit,
+  submission, submitting, onSubmit, cancelling, onCancel,
 }: Props) {
   const [memo, setMemo] = useState('');
   const [evidenceLinks, setEvidenceLinks] = useState<EvidenceLink[]>([]);
@@ -102,6 +104,20 @@ export default function SnapshotPanel({
               </span>
             </div>
           </div>
+          {submission.status === 'submitted' && onCancel && (
+            <button
+              className="snap-cancel-btn"
+              onClick={() => {
+                if (confirm(`${month} 제출을 취소하시겠습니까?\n취소 후 데이터를 수정하여 다시 제출할 수 있습니다.`)) {
+                  onCancel();
+                }
+              }}
+              disabled={cancelling}
+            >
+              <FiXCircle size={14} />
+              {cancelling ? '취소 중...' : '제출 취소'}
+            </button>
+          )}
           {(submission.status === 'revision' || submission.status === 'rejected') && (
             <span className="snap-submission-hint">
               데이터를 수정한 후 다시 제출할 수 있습니다
