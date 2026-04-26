@@ -142,6 +142,20 @@ export interface SubmissionComment {
   created_at: string;
 }
 
+// 알림
+export type NotificationType = 'submission' | 'approved' | 'revision' | 'rejected' | 'system';
+
+export interface KncNotification {
+  id: string;
+  user_id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  link: string | null;
+  is_read: boolean;
+  created_at: string;
+}
+
 // 3단계 회원 권한
 export type KncRole = 'superadmin' | 'manager' | 'company_member';
 

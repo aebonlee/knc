@@ -27,4 +27,5 @@ export const TABLES = {
   user_roles: `${site.dbPrefix}user_roles`,
   submissions: `${site.dbPrefix}submissions`,
   submission_comments: `${site.dbPrefix}submission_comments`,
+  notifications: `${site.dbPrefix}notifications`,
 } as const;

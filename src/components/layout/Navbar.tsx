@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { usePhase } from '../../contexts/PhaseContext';
 import { FiMenu, FiX, FiSun, FiMoon, FiLogOut, FiUser } from 'react-icons/fi';
+import NotificationBell from './NotificationBell';
 import site from '../../config/site';
 
 const COLOR_THEMES = site.colors as { name: string; color: string }[];
@@ -153,6 +154,8 @@ export default function Navbar() {
             <button className="theme-toggle" onClick={toggleTheme} title="테마 변경">
               {theme === 'light' ? <FiMoon size={18} /> : <FiSun size={18} />}
             </button>
+
+            {isLoggedIn && <NotificationBell />}
 
             {isLoggedIn ? (
               <div className="nav-user">

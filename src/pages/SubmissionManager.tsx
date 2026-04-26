@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { FiCheck, FiAlertCircle, FiXCircle, FiMessageSquare, FiChevronDown, FiChevronUp } from 'react-icons/fi';
 import { supabase, TABLES } from '../utils/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { createNotification } from '../utils/notifications';
 import type { Submission, SubmissionComment, Company } from '../types';
 
 type StatusTab = 'all' | 'submitted' | 'approved' | 'revision' | 'rejected';
@@ -172,6 +173,19 @@ export default function SubmissionManager() {
         if (commentErr) {
           console.error('코멘트 저장 실패:', commentErr);
         }
+      }
+
+      // 3. 제출자에게 알림
+      const sub = submissions.find(s => s.id === actionTarget);
+      if (sub) {
+        const typeLabel = actionType === 'approved' ? '승인' : actionType === 'revision' ? '보완요청' : '반려';
+        createNotification({
+          userId: sub.submitted_by,
+          type: actionType,
+          title: `실적 ${typeLabel}`,
+          message: `${sub.company_name} — ${sub.month} 제출건이 ${typeLabel} 처리되었습니다.`,
+          link: `/companies/${sub.company_id}`,
+        });
       }
 
       closeAction();

@@ -5,6 +5,7 @@ import { supabase, TABLES } from '../utils/supabase';
 import { DEFAULT_REFERENCE_DATA } from '../data/referenceData';
 import { getWeight } from '../hooks/useCompanyData';
 import { useAuth } from '../contexts/AuthContext';
+import { notifyMultiple } from '../utils/notifications';
 import CompanySummary from '../components/company/CompanySummary';
 import CompanyForm from '../components/company/CompanyForm';
 import DemandCompanyManager from '../components/company/DemandCompanyManager';
@@ -186,6 +187,23 @@ export default function CompanyDetail() {
         submitted_by: user.id,
         status: 'submitted',
       });
+
+      // 관리자/담당자에게 알림
+      if (supabase) {
+        const { data: admins } = await supabase
+          .from(TABLES.user_roles)
+          .select('user_id')
+          .in('role', ['superadmin', 'manager']);
+        if (admins && admins.length > 0) {
+          const adminIds = admins.map((a: { user_id: string }) => a.user_id);
+          notifyMultiple(adminIds, {
+            type: 'submission',
+            title: '새로운 실적 제출',
+            message: `${company?.company_name} — ${selectedMonth} 데이터가 제출되었습니다.`,
+            link: '/admin/submissions',
+          });
+        }
+      }
 
       alert(`${selectedMonth} 데이터가 관리자에게 제출되었습니다.`);
       fetchData();
