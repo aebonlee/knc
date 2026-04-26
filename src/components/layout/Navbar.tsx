@@ -48,6 +48,9 @@ export default function Navbar() {
       { path: '/about', label: '이용안내' },
       { path: '/formulas', label: '산출기준' },
     ];
+    if (isSuperadmin || kncRole === 'manager') {
+      items.push({ path: '/admin/submissions', label: '제출 관리' });
+    }
     if (isSuperadmin) {
       items.push({ path: '/admin/users', label: '사용자 관리' });
     }

@@ -1,8 +1,15 @@
 import { useState } from 'react';
-import { FiSave, FiRotateCcw, FiTrash2, FiClock } from 'react-icons/fi';
+import { FiSave, FiRotateCcw, FiTrash2, FiClock, FiSend, FiCheck, FiAlertCircle, FiXCircle } from 'react-icons/fi';
 import { formatWon } from '../../hooks/useCompanyData';
-import type { ActivitySnapshot, ReferenceData } from '../../types';
+import type { ActivitySnapshot, ReferenceData, Submission } from '../../types';
 import { getWeight } from '../../hooks/useCompanyData';
+
+const STATUS_INFO: Record<Submission['status'], { label: string; icon: typeof FiCheck; color: string; bg: string }> = {
+  submitted: { label: '검토대기', icon: FiClock, color: '#F59E0B', bg: '#FFF7ED' },
+  approved: { label: '승인완료', icon: FiCheck, color: '#059669', bg: '#ECFDF5' },
+  revision: { label: '보완요청', icon: FiAlertCircle, color: '#2563EB', bg: '#EFF6FF' },
+  rejected: { label: '반려', icon: FiXCircle, color: '#DC2626', bg: '#FEF2F2' },
+};
 
 interface Props {
   snapshots: ActivitySnapshot[];
@@ -12,6 +19,10 @@ interface Props {
   onSave: (memo: string) => void;
   onRestore: (snapshot: ActivitySnapshot) => void;
   onDelete: (snapshotId: string) => void;
+  // 제출 관련
+  submission?: Submission | null;
+  submitting?: boolean;
+  onSubmit?: () => void;
 }
 
 function getSnapshotStats(snap: ActivitySnapshot, refData: ReferenceData[]) {
@@ -36,6 +47,7 @@ function formatDateTime(iso: string) {
 
 export default function SnapshotPanel({
   snapshots, month, referenceData, saving, onSave, onRestore, onDelete,
+  submission, submitting, onSubmit,
 }: Props) {
   const [memo, setMemo] = useState('');
 
@@ -44,8 +56,34 @@ export default function SnapshotPanel({
     setMemo('');
   };
 
+  const statusInfo = submission ? STATUS_INFO[submission.status] : null;
+  const canSubmit = !submission || submission.status === 'revision' || submission.status === 'rejected';
+
   return (
     <div className="snapshot-panel-v2">
+      {/* 제출 상태 배너 */}
+      {submission && statusInfo && (
+        <div className="snap-submission-banner" style={{ borderColor: statusInfo.color, background: statusInfo.bg }}>
+          <div className="snap-submission-left">
+            <statusInfo.icon size={18} style={{ color: statusInfo.color }} />
+            <div>
+              <strong style={{ color: statusInfo.color }}>{statusInfo.label}</strong>
+              <span className="snap-submission-date">
+                {submission.status === 'submitted'
+                  ? `제출일: ${new Date(submission.submitted_at).toLocaleDateString('ko-KR')}`
+                  : `심사일: ${submission.reviewed_at ? new Date(submission.reviewed_at).toLocaleDateString('ko-KR') : '-'}`
+                }
+              </span>
+            </div>
+          </div>
+          {(submission.status === 'revision' || submission.status === 'rejected') && (
+            <span className="snap-submission-hint">
+              데이터를 수정한 후 다시 제출할 수 있습니다
+            </span>
+          )}
+        </div>
+      )}
+
       {/* 저장 바 */}
       <div className="snap-save-bar">
         <div className="snap-save-left">
@@ -69,6 +107,20 @@ export default function SnapshotPanel({
             <FiSave size={15} />
             {saving ? '저장 중...' : '저장'}
           </button>
+          {onSubmit && canSubmit && (
+            <button
+              className="snap-submit-btn"
+              onClick={() => {
+                if (confirm(`${month} 데이터를 관리자에게 제출하시겠습니까?\n제출 후 관리자 검토가 진행됩니다.`)) {
+                  onSubmit();
+                }
+              }}
+              disabled={submitting}
+            >
+              <FiSend size={15} />
+              {submitting ? '제출 중...' : submission ? '재제출' : '관리자에게 제출'}
+            </button>
+          )}
         </div>
       </div>
 

@@ -117,6 +117,31 @@ export interface RiskSummary {
   total_saving: number;
 }
 
+// 제출/승인 워크플로우
+export type SubmissionStatus = 'submitted' | 'approved' | 'revision' | 'rejected';
+
+export interface Submission {
+  id: string;
+  company_id: string;
+  month: string;
+  snapshot_id: string | null;
+  submitted_by: string;
+  status: SubmissionStatus;
+  submitted_at: string;
+  reviewed_at: string | null;
+  reviewed_by: string | null;
+  created_at: string;
+}
+
+export interface SubmissionComment {
+  id: string;
+  submission_id: string;
+  user_id: string;
+  user_name: string | null;
+  comment: string;
+  created_at: string;
+}
+
 // 3단계 회원 권한
 export type KncRole = 'superadmin' | 'manager' | 'company_member';
 

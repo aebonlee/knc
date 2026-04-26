@@ -12,12 +12,12 @@ import ActivityInputTable from '../components/company/ActivityInputTable';
 import SnapshotPanel from '../components/company/SnapshotPanel';
 import type {
   Company, DemandCompany, Activity, ReferenceData,
-  CompanyMonth, CompanyUnitPrice, ActivitySnapshot,
+  CompanyMonth, CompanyUnitPrice, ActivitySnapshot, Submission,
 } from '../types';
 
 export default function CompanyDetail() {
   const { id } = useParams<{ id: string }>();
-  const { isCompanyMember, companyId } = useAuth();
+  const { isCompanyMember, companyId, user } = useAuth();
 
   // company_member가 다른 기업 접근 시 리다이렉트
   if (isCompanyMember && companyId && id !== companyId) {
@@ -36,12 +36,14 @@ export default function CompanyDetail() {
   const [addingMonth, setAddingMonth] = useState(false);
   const [newMonth, setNewMonth] = useState('');
   const [savingSnapshot, setSavingSnapshot] = useState(false);
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [submitting, setSubmitting] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!supabase || !id) return;
     setLoading(true);
     try {
-      const [compRes, demandRes, actRes, refRes, monthRes, priceRes, snapRes] = await Promise.all([
+      const [compRes, demandRes, actRes, refRes, monthRes, priceRes, snapRes, subRes] = await Promise.all([
         supabase.from(TABLES.companies).select('*').eq('id', id).single(),
         supabase.from(TABLES.demand_companies).select('*').eq('company_id', id).order('demand_no'),
         supabase.from(TABLES.activities).select('*').eq('company_id', id),
@@ -49,6 +51,7 @@ export default function CompanyDetail() {
         supabase.from(TABLES.company_months).select('*').eq('company_id', id).order('month'),
         supabase.from(TABLES.company_unit_prices).select('*').eq('company_id', id),
         supabase.from(TABLES.activity_snapshots).select('*').eq('company_id', id).order('created_at', { ascending: false }).limit(20),
+        supabase.from(TABLES.submissions).select('*').eq('company_id', id).order('submitted_at', { ascending: false }),
       ]);
       if (compRes.data) setCompany(compRes.data);
       if (demandRes.data) setDemandCompanies(demandRes.data);
@@ -62,6 +65,7 @@ export default function CompanyDetail() {
       }
       if (priceRes.data) setUnitPrices(priceRes.data);
       if (snapRes.data) setSnapshots(snapRes.data);
+      if (subRes.data) setSubmissions(subRes.data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -150,6 +154,46 @@ export default function CompanyDetail() {
       console.error(err);
     } finally {
       setSavingSnapshot(false);
+    }
+  };
+
+  // 관리자에게 제출
+  const submitForReview = async () => {
+    if (!supabase || !id || !selectedMonth || !user) return;
+    setSubmitting(true);
+    try {
+      // 먼저 스냅샷 저장
+      const monthDemands = demandCompanies.filter(d => d.month === selectedMonth);
+      const monthDemandIds = new Set(monthDemands.map(d => d.id));
+      const monthActs = activities.filter(a => a.month === selectedMonth && monthDemandIds.has(a.demand_company_id));
+
+      const { data: snapData } = await supabase.from(TABLES.activity_snapshots).insert({
+        company_id: id,
+        month: selectedMonth,
+        snapshot: {
+          demand_companies: monthDemands,
+          activities: monthActs,
+          unit_prices: unitPrices,
+        },
+        description: '제출 시 자동 저장',
+      }).select().single();
+
+      // 제출 레코드 생성
+      await supabase.from(TABLES.submissions).insert({
+        company_id: id,
+        month: selectedMonth,
+        snapshot_id: snapData?.id || null,
+        submitted_by: user.id,
+        status: 'submitted',
+      });
+
+      alert(`${selectedMonth} 데이터가 관리자에게 제출되었습니다.`);
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      alert('제출 중 오류가 발생했습니다.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -259,6 +303,9 @@ export default function CompanyDetail() {
   }, 0);
   const currentMonthSaving = selectedMonth ? getMonthSaving(selectedMonth) : 0;
   const monthSnapshots = snapshots.filter(s => s.month === selectedMonth);
+  const currentSubmission = selectedMonth
+    ? submissions.find(s => s.month === selectedMonth) || null
+    : null;
 
   return (
     <div className="page">
@@ -358,6 +405,9 @@ export default function CompanyDetail() {
             onSave={saveSnapshot}
             onRestore={restoreSnapshot}
             onDelete={deleteSnapshot}
+            submission={currentSubmission}
+            submitting={submitting}
+            onSubmit={submitForReview}
           />
         </div>
       ) : (

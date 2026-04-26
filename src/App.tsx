@@ -19,6 +19,7 @@ const About = lazy(() => import('./pages/About'));
 const Formulas = lazy(() => import('./pages/Formulas'));
 const CompanyDashboard = lazy(() => import('./pages/CompanyDashboard'));
 const UserManagement = lazy(() => import('./pages/UserManagement'));
+const SubmissionManager = lazy(() => import('./pages/SubmissionManager'));
 const PendingApproval = lazy(() => import('./pages/PendingApproval'));
 
 const Loading = () => <div className="page-loading"><div className="spinner" /></div>;
@@ -73,6 +74,7 @@ function AppRoutes() {
         <Route path="/analytics" element={<AuthGuard><Analytics /></AuthGuard>} />
         <Route path="/report" element={<AuthGuard><Report /></AuthGuard>} />
         <Route path="/admin/users" element={<RoleGuard allowed={['superadmin']}><UserManagement /></RoleGuard>} />
+        <Route path="/admin/submissions" element={<RoleGuard allowed={['superadmin', 'manager']}><SubmissionManager /></RoleGuard>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>

@@ -25,4 +25,6 @@ export const TABLES = {
   company_unit_prices: `${site.dbPrefix}company_unit_prices`,
   activity_snapshots: `${site.dbPrefix}activity_snapshots`,
   user_roles: `${site.dbPrefix}user_roles`,
+  submissions: `${site.dbPrefix}submissions`,
+  submission_comments: `${site.dbPrefix}submission_comments`,
 } as const;
