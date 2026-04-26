@@ -128,7 +128,7 @@ export default function SnapshotPanel({
       <div className="snap-history">
         <div className="snap-history-header">
           <FiClock size={15} />
-          <span>저장 히스토��</span>
+          <span>저장 히스토리</span>
           <span className="snap-history-count">{snapshots.length}건</span>
         </div>
 
@@ -189,7 +189,7 @@ export default function SnapshotPanel({
                       <button
                         className="snap-delete-btn"
                         onClick={() => {
-                          if (confirm('이 저장 기록을 ���제하시겠습니까?')) {
+                          if (confirm('이 저장 기록을 삭제하시겠습니까?')) {
                             onDelete(snap.id);
                           }
                         }}

@@ -37,6 +37,6 @@ export async function notifyMultiple(users: string[], params: Omit<NotifyParams,
     }));
     await supabase.from(TABLES.notifications).insert(rows);
   } catch (err) {
-    console.error('일괄 알림 생�� 실패:', err);
+    console.error('일괄 알림 생성 실패:', err);
   }
 }
