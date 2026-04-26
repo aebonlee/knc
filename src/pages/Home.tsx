@@ -58,22 +58,29 @@ function CompanyView({ companyId }: { companyId: string }) {
 
 export default function Home() {
   const { phase } = usePhase();
+  const [dashPhase, setDashPhase] = useState<number>(phase);
+  const [dashMonth, setDashMonth] = useState('');
   const [selectedCompanyId, setSelectedCompanyId] = useState('');
+
+  const phaseArg = dashPhase === 0 ? undefined : dashPhase;
+  const monthArg = dashMonth || undefined;
+
   const {
     companies, companiesWithSavings, totalSaving, performance, settings,
-    savingsByType, riskSummary, loading,
-  } = useCompanyData(phase);
+    savingsByType, riskSummary, allMonths, loading,
+  } = useCompanyData(phaseArg, monthArg);
 
   if (loading) {
     return <div className="page-loading"><div className="spinner" /></div>;
   }
 
   const isCompanyView = selectedCompanyId !== '';
+  const phaseLabel = dashPhase === 0 ? '1+2차 통합' : `${dashPhase}차 사업`;
 
   return (
     <div className="page dashboard-page dashboard-fit">
-      {/* 뷰 전환 셀렉터 */}
-      <div className="dashboard-view-selector">
+      {/* 필터 바: 기업 드롭다운 + Phase 버튼 + 월 드롭다운 */}
+      <div className="dashboard-filter-bar">
         <select
           value={selectedCompanyId}
           onChange={e => setSelectedCompanyId(e.target.value)}
@@ -88,6 +95,36 @@ export default function Home() {
             ))}
           </optgroup>
         </select>
+
+        <div className="dash-phase-group">
+          {([
+            { value: 1, label: '1차' },
+            { value: 2, label: '2차' },
+            { value: 0, label: '1+2차' },
+          ] as const).map(opt => (
+            <button
+              key={opt.value}
+              className={`dash-phase-btn${dashPhase === opt.value ? ' active' : ''}`}
+              onClick={() => {
+                setDashPhase(opt.value);
+                setDashMonth('');
+              }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+
+        <select
+          className="view-select dash-month-select"
+          value={dashMonth}
+          onChange={e => setDashMonth(e.target.value)}
+        >
+          <option value="">전체 월</option>
+          {allMonths.map(m => (
+            <option key={m} value={m}>{m}</option>
+          ))}
+        </select>
       </div>
 
       {isCompanyView ? (
@@ -95,8 +132,8 @@ export default function Home() {
       ) : (
         <>
           <div className="page-header">
-            <h1>전체 통합집계 대시보드</h1>
-            <p>{settings.project_phase} 사회비용 절감 성과 현황</p>
+            <h1>{phaseLabel} 대시보드</h1>
+            <p>{settings.project_phase} 사회비용 절감 성과 현황{dashMonth ? ` (${dashMonth})` : ''}</p>
           </div>
 
           <KpiCards

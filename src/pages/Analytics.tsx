@@ -35,8 +35,9 @@ export default function Analytics() {
   const [mode, setMode] = useState<AnalyticsMode>('company');
   const [selectedCompanyIds, setSelectedCompanyIds] = useState<string[]>([]);
   const [selectedTypes, setSelectedTypes] = useState<SolutionType[]>(['공학', '보호구', '행동교정']);
-  const [selectedMonth, setSelectedMonth] = useState<string>('');
+  const [selectedMonths, setSelectedMonths] = useState<string[]>([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [monthPanelOpen, setMonthPanelOpen] = useState(false);
 
   // 월 목록 추출
   const availableMonths = useMemo(() => {
@@ -44,11 +45,11 @@ export default function Analytics() {
     return months;
   }, [activities]);
 
-  // 월별 필터된 활동
+  // 월별 필터된 활동 (다중 월)
   const filteredActivities = useMemo(() => {
-    if (!selectedMonth) return activities;
-    return activities.filter(a => a.month === selectedMonth);
-  }, [activities, selectedMonth]);
+    if (selectedMonths.length === 0) return activities;
+    return activities.filter(a => selectedMonths.includes(a.month));
+  }, [activities, selectedMonths]);
 
   // 월 필터 적용된 기업별 절감액 재계산
   const monthFilteredCompanies: CompanyWithSavings[] = useMemo(() => {
@@ -229,9 +230,13 @@ export default function Analytics() {
     XLSX.utils.book_append_sheet(wb, ws1, '기업별 절감액');
     XLSX.utils.book_append_sheet(wb, ws2, '위험요인별 분석');
 
-    const monthLabel = selectedMonth || '전체';
+    const monthLabel = selectedMonths.length === 0
+      ? '전체'
+      : selectedMonths.length === 1
+        ? selectedMonths[0]
+        : `${selectedMonths[0]}~${selectedMonths[selectedMonths.length - 1]}`;
     XLSX.writeFile(wb, `KNC_성과분석_${monthLabel}_${new Date().toISOString().slice(0, 10)}.xlsx`);
-  }, [rankedCompanies, filteredActivities, filteredCompanies, referenceData, unitPrices, selectedMonth]);
+  }, [rankedCompanies, filteredActivities, filteredCompanies, referenceData, unitPrices, selectedMonths]);
 
   if (loading) {
     return <div className="page-loading"><div className="spinner" /></div>;
@@ -266,17 +271,55 @@ export default function Analytics() {
           </button>
         </div>
 
-        <div className="analytics-month-filter">
-          <select
-            className="month-filter-select"
-            value={selectedMonth}
-            onChange={e => setSelectedMonth(e.target.value)}
+        <div className="analytics-month-multi">
+          <button
+            className="multi-select-trigger"
+            onClick={() => setMonthPanelOpen(!monthPanelOpen)}
           >
-            <option value="">전체 월</option>
-            {availableMonths.map(m => (
-              <option key={m} value={m}>{m}</option>
-            ))}
-          </select>
+            {selectedMonths.length === 0
+              ? '전체 월'
+              : `${selectedMonths.length}개월 선택`}
+            <span className="multi-select-arrow">{monthPanelOpen ? '▲' : '▼'}</span>
+          </button>
+          {monthPanelOpen && (
+            <div className="multi-select-dropdown analytics-month-dropdown">
+              <div className="analytics-month-quick">
+                <button onClick={() => setSelectedMonths([])}>전체</button>
+                {[[1,3],[4,6],[7,9],[10,12]].map(([s,e]) => {
+                  const range = availableMonths.filter(m => {
+                    const mon = parseInt(m.split('-')[1], 10);
+                    return mon >= s && mon <= e;
+                  });
+                  if (range.length === 0) return null;
+                  return (
+                    <button key={s} onClick={() => setSelectedMonths(range)}>
+                      {s}~{e}월
+                    </button>
+                  );
+                })}
+                <button onClick={() => {
+                  if (selectedMonths.length === availableMonths.length) setSelectedMonths([]);
+                  else setSelectedMonths([...availableMonths]);
+                }}>
+                  {selectedMonths.length === availableMonths.length ? '해제' : '전체 선택'}
+                </button>
+              </div>
+              {availableMonths.map(m => (
+                <label key={m} className="multi-select-item">
+                  <input
+                    type="checkbox"
+                    checked={selectedMonths.includes(m)}
+                    onChange={() => {
+                      setSelectedMonths(prev =>
+                        prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m].sort()
+                      );
+                    }}
+                  />
+                  {m}
+                </label>
+              ))}
+            </div>
+          )}
         </div>
 
         {mode === 'company' ? (

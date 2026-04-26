@@ -78,7 +78,7 @@ const DEFAULT_SETTINGS: ProjectSettings = {
   updated_at: new Date().toISOString(),
 };
 
-export function useCompanyData(phaseFilter?: number) {
+export function useCompanyData(phaseFilter?: number, monthFilter?: string) {
   const [allCompanies, setAllCompanies] = useState<Company[]>([]);
   const [allDemandCompanies, setAllDemandCompanies] = useState<DemandCompany[]>([]);
   const [allActivities, setAllActivities] = useState<Activity[]>([]);
@@ -123,9 +123,37 @@ export function useCompanyData(phaseFilter?: number) {
     ? allCompanies.filter(c => (c.phase ?? 1) === phaseFilter)
     : allCompanies;
   const companyIds = new Set(companies.map(c => c.id));
-  const demandCompanies = allDemandCompanies.filter(d => companyIds.has(d.company_id));
-  const activities = allActivities.filter(a => companyIds.has(a.company_id));
-  const settings = allSettings.find(s => s.phase === (phaseFilter || 1)) || DEFAULT_SETTINGS;
+  const demandCompaniesAll = allDemandCompanies.filter(d => companyIds.has(d.company_id));
+
+  // 월 목록 추출 (해당 phase의 사용 가능한 월)
+  const allMonths = [...new Set(
+    allActivities.filter(a => companyIds.has(a.company_id)).map(a => a.month).filter(Boolean)
+  )].sort();
+
+  // 월 필터 적용
+  const demandCompanies = monthFilter
+    ? demandCompaniesAll.filter(d => d.month === monthFilter)
+    : demandCompaniesAll;
+  const demandCompanyIds = monthFilter ? new Set(demandCompanies.map(d => d.id)) : null;
+  const activities = allActivities.filter(a => {
+    if (!companyIds.has(a.company_id)) return false;
+    if (monthFilter && a.month !== monthFilter) return false;
+    return true;
+  });
+
+  // settings: 전체(phaseFilter 없음)일 때 합산, 아니면 해당 phase
+  const settings: ProjectSettings = phaseFilter
+    ? (allSettings.find(s => s.phase === phaseFilter) || DEFAULT_SETTINGS)
+    : allSettings.length > 0
+      ? {
+          ...allSettings[0],
+          project_phase: '1+2차 통합',
+          phase: 0,
+          total_investment: allSettings.reduce((s, v) => s + v.total_investment, 0),
+          underperformance_threshold: allSettings.reduce((s, v) => s + v.underperformance_threshold, 0),
+          max_target: allSettings.reduce((s, v) => s + v.max_target, 0),
+        }
+      : DEFAULT_SETTINGS;
 
   // 기업별 절감액 계산 (커스텀 단가 반영)
   const companiesWithSavings: CompanyWithSavings[] = companies.map(comp => {
@@ -183,6 +211,6 @@ export function useCompanyData(phaseFilter?: number) {
   return {
     companies, demandCompanies, activities, referenceData, unitPrices, settings,
     companiesWithSavings, totalSaving, performance, savingsByType, riskSummary,
-    loading, refetch: fetchAll,
+    allMonths, loading, refetch: fetchAll,
   };
 }
