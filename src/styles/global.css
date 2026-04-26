@@ -469,59 +469,30 @@ a { color: inherit; text-decoration: none; }
   box-shadow: var(--shadow-sm);
 }
 
-/* 대시보드 월 체크박스 — 가로 칩 */
+/* 대시보드 월 체크박스 — 가로 나열 */
 .dash-month-row {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
-.dash-month-chip {
+.dash-month-check {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  padding: 4px 10px;
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  background: var(--bg-card);
+  font-size: 0.82rem;
   color: var(--text-secondary);
-  font-size: 0.78rem;
-  font-weight: 500;
   cursor: pointer;
-  transition: var(--transition);
   user-select: none;
+  white-space: nowrap;
 }
 
-.dash-month-chip:hover {
-  border-color: var(--primary-light);
-  color: var(--primary);
-}
-
-.dash-month-chip.active {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: #fff;
-}
-
-.dash-month-chip input[type="checkbox"] {
-  display: none;
-}
-
-.dash-month-clear {
-  padding: 4px 10px;
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  background: transparent;
-  color: var(--text-muted);
-  font-size: 0.75rem;
+.dash-month-check input[type="checkbox"] {
+  accent-color: var(--primary);
+  width: 14px;
+  height: 14px;
   cursor: pointer;
-  transition: var(--transition);
-}
-
-.dash-month-clear:hover {
-  border-color: var(--danger);
-  color: var(--danger);
 }
 
 .page-header-row {

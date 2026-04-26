@@ -129,23 +129,17 @@ export default function Home() {
         <div className="dash-month-row">
           {allMonths.map(m => {
             const mon = m.split('-')[1];
-            const checked = dashMonths.includes(m);
             return (
-              <label key={m} className={`dash-month-chip${checked ? ' active' : ''}`}>
+              <label key={m} className="dash-month-check">
                 <input
                   type="checkbox"
-                  checked={checked}
+                  checked={dashMonths.includes(m)}
                   onChange={() => toggleMonth(m)}
                 />
                 {parseInt(mon, 10)}월
               </label>
             );
           })}
-          {dashMonths.length > 0 && (
-            <button className="dash-month-clear" onClick={() => setDashMonths([])}>
-              초기화
-            </button>
-          )}
         </div>
       </div>
 
