@@ -81,9 +81,7 @@ export default function Navbar() {
 
   const navItems = getNavItems();
 
-  const externalLinks = [
-    { href: 'https://safety.dreamitbiz.com/', label: '산업안전이란?' },
-  ];
+  const externalLinks: { href: string; label: string }[] = [];
 
   const isActive = (path: string) => location.pathname === path;
 

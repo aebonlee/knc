@@ -3108,6 +3108,8 @@ th:last-child .formula-balloon::after,
   gap: 4px;
   margin-bottom: 20px;
   border-bottom: 2px solid var(--border);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .user-tab {
@@ -3146,6 +3148,64 @@ th:last-child .formula-balloon::after,
 .tab-count-pending {
   background: var(--warning);
   color: white;
+}
+
+.tab-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--border);
+  margin: auto 8px;
+  flex-shrink: 0;
+}
+
+.user-tab-company {
+  font-size: 0.82rem;
+  padding: 8px 14px;
+}
+.user-tab-company.active {
+  color: #F97316;
+  border-bottom-color: #F97316;
+}
+
+/* 기업별 탭 콘텐츠 */
+.company-tab-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+}
+.company-tab-info h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+.company-tab-info p {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+.btn-impersonate {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border: none;
+  border-radius: var(--radius-xs);
+  background: #F97316;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+.btn-impersonate:hover {
+  background: #EA580C;
 }
 
 /* Inline approve UI */

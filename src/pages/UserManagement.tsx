@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { FiSearch, FiUserPlus, FiTrash2, FiSave, FiUserCheck } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
+import { FiSearch, FiUserPlus, FiTrash2, FiSave, FiUserCheck, FiEye } from 'react-icons/fi';
 import { supabase, TABLES } from '../utils/supabase';
+import { useAuth } from '../contexts/AuthContext';
 import type { KncRole, KncUserRole, Company } from '../types';
 
 interface UserRow {
@@ -23,19 +25,20 @@ interface PendingUser {
   created_at: string;
 }
 
-type Tab = 'assigned' | 'pending';
-
 // 개발자 계정 — 사용자 관리 목록에서 숨김
 const HIDDEN_EMAILS = ['aebon@kakao.com', 'aebon@kyonggi.ac.kr'];
 
 export default function UserManagement() {
+  const { setImpersonateCompany } = useAuth();
+  const navigate = useNavigate();
   const [users, setUsers] = useState<UserRow[]>([]);
   const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
-  const [tab, setTab] = useState<Tab>('pending');
+  // tab: 'pending' | 'assigned' | 'company-{id}'
+  const [tab, setTab] = useState<string>('pending');
 
   // 빠른 승인 폼
   const [approving, setApproving] = useState<string | null>(null);
@@ -209,6 +212,12 @@ export default function UserManagement() {
     }
   };
 
+  // 기업 모드 전환
+  const handleImpersonate = (companyId: string) => {
+    setImpersonateCompany(companyId);
+    navigate(`/companies/${companyId}/dashboard`);
+  };
+
   const filteredAssigned = users.filter(u =>
     !HIDDEN_EMAILS.includes(u.email) &&
     (u.email.toLowerCase().includes(search.toLowerCase()) ||
@@ -220,6 +229,19 @@ export default function UserManagement() {
     (u.email.toLowerCase().includes(search.toLowerCase()) ||
     (u.display_name || '').toLowerCase().includes(search.toLowerCase()))
   );
+
+  // 기업별 배정 사용자 (company_member만)
+  const companiesWithMembers = companies.filter(c =>
+    users.some(u => u.company_id === c.id && u.role === 'company_member')
+  );
+
+  // 현재 탭이 기업 탭인 경우
+  const isCompanyTab = tab.startsWith('company-');
+  const currentCompanyId = isCompanyTab ? tab.replace('company-', '') : null;
+  const currentCompany = currentCompanyId ? companies.find(c => c.id === currentCompanyId) : null;
+  const currentCompanyUsers = currentCompanyId
+    ? users.filter(u => u.company_id === currentCompanyId && !HIDDEN_EMAILS.includes(u.email))
+    : [];
 
   if (loading) return <div className="page-loading"><div className="spinner" /></div>;
 
@@ -248,6 +270,20 @@ export default function UserManagement() {
           배정완료
           <span className="tab-count">{filteredAssigned.length}</span>
         </button>
+        <span className="tab-divider" />
+        {companiesWithMembers.map(c => {
+          const memberCount = users.filter(u => u.company_id === c.id && u.role === 'company_member').length;
+          return (
+            <button
+              key={c.id}
+              className={`user-tab user-tab-company ${tab === `company-${c.id}` ? 'active' : ''}`}
+              onClick={() => setTab(`company-${c.id}`)}
+            >
+              {c.company_name}
+              <span className="tab-count">{memberCount}</span>
+            </button>
+          );
+        })}
       </div>
 
       <div className="user-mgmt-toolbar">
@@ -458,6 +494,74 @@ export default function UserManagement() {
               )}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* 기업별 탭 */}
+      {isCompanyTab && currentCompany && (
+        <div className="company-tab-content">
+          <div className="company-tab-header">
+            <div className="company-tab-info">
+              <h2>No.{currentCompany.company_no} {currentCompany.company_name}</h2>
+              <p>{currentCompany.solution_type} · 담당자: {currentCompany.manager_name || '-'} · {currentCompany.manager_phone || '-'}</p>
+            </div>
+            <button
+              className="btn-impersonate"
+              onClick={() => handleImpersonate(currentCompany.id)}
+            >
+              <FiEye size={16} /> 기업 모드 전환
+            </button>
+          </div>
+
+          <div className="user-table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>이메일</th>
+                  <th>이름</th>
+                  <th>연락처</th>
+                  <th>역할</th>
+                  <th>등록일</th>
+                  <th>관리</th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentCompanyUsers.length === 0 ? (
+                  <tr><td colSpan={6} className="table-empty">배정된 회원이 없습니다</td></tr>
+                ) : (
+                  currentCompanyUsers.map(u => (
+                    <tr key={u.id}>
+                      <td>{u.email}</td>
+                      <td>{u.display_name || '-'}</td>
+                      <td>{u.phone || '-'}</td>
+                      <td>
+                        <select
+                          value={u.role}
+                          onChange={e => updateRole(u.user_id, e.target.value as KncRole, u.company_id)}
+                          className="role-select"
+                          disabled={saving === u.user_id}
+                        >
+                          <option value="superadmin">총괄 관리자</option>
+                          <option value="manager">업무담당자</option>
+                          <option value="company_member">기업 입력회원</option>
+                        </select>
+                      </td>
+                      <td className="text-muted">{new Date(u.created_at).toLocaleDateString('ko-KR')}</td>
+                      <td>
+                        <button
+                          className="btn-icon btn-danger-icon"
+                          onClick={() => deleteRole(u.user_id, u.email)}
+                          title="역할 삭제"
+                        >
+                          <FiTrash2 size={14} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>
