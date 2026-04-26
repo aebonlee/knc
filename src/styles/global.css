@@ -3005,6 +3005,77 @@ th:last-child .formula-balloon::after,
 }
 
 /* =====================================================
+   Report Type Tabs & Controls
+   ===================================================== */
+.report-type-tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.report-type-tab {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  cursor: pointer;
+  transition: var(--transition);
+  flex: 1;
+  min-width: 180px;
+  text-align: left;
+}
+.report-type-tab div { display: flex; flex-direction: column; gap: 2px; }
+.report-type-tab strong { font-size: 0.95rem; color: var(--text); }
+.report-type-tab span { font-size: 0.78rem; color: var(--text-muted); }
+.report-type-tab:hover { border-color: var(--primary); }
+.report-type-tab.active {
+  border-color: var(--primary);
+  background: var(--primary-bg);
+}
+.report-type-tab.active strong { color: var(--primary); }
+
+.report-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.report-controls .form-select {
+  flex: 1;
+  max-width: 400px;
+  min-width: 200px;
+}
+
+.report-subsection {
+  margin-bottom: 20px;
+}
+.report-subsection h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.report-total-row td {
+  border-top: 2px solid var(--primary);
+  background: var(--primary-bg);
+}
+
+@media (max-width: 640px) {
+  .report-type-tabs { flex-direction: column; }
+  .report-type-tab { min-width: 100%; }
+  .report-controls { flex-direction: column; align-items: stretch; }
+  .report-controls .form-select { max-width: 100%; }
+}
+
+/* =====================================================
    Snapshot Submit Button & Status Banner
    ===================================================== */
 .snap-submit-btn {
