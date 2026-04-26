@@ -1,8 +1,46 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { supabase, TABLES } from '../../utils/supabase';
 import { getWeight, formatWon } from '../../hooks/useCompanyData';
 import { ACTIVITY_TYPE_LABELS } from '../../data/referenceData';
 import type { ReferenceData, DemandCompany, Activity, ActivityType, CompanyUnitPrice } from '../../types';
+
+/* 숫자 입력 셀: 클릭→전체선택, 자유 입력, blur/Enter 시 저장 */
+function NumericCell({
+  value, onSave, className, min = 0,
+}: {
+  value: number; onSave: (v: number) => void; className?: string; min?: number;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState('');
+  const ref = useRef<HTMLInputElement>(null);
+
+  const commit = () => {
+    setEditing(false);
+    const parsed = Math.max(min, Number(draft) || 0);
+    if (parsed !== value) onSave(parsed);
+  };
+
+  return (
+    <input
+      ref={ref}
+      type="number"
+      min={min}
+      className={className}
+      value={editing ? draft : value}
+      onFocus={e => {
+        setEditing(true);
+        setDraft(String(value));
+        requestAnimationFrame(() => e.target.select());
+      }}
+      onChange={e => setDraft(e.target.value)}
+      onBlur={commit}
+      onKeyDown={e => {
+        if (e.key === 'Enter') { e.preventDefault(); ref.current?.blur(); }
+        if (e.key === 'Escape') { setEditing(false); setDraft(String(value)); ref.current?.blur(); }
+      }}
+    />
+  );
+}
 
 interface Props {
   companyId: string;
@@ -161,14 +199,10 @@ export default function ActivityInputTable({
                       </span>
                     </td>
                     <td className="cell-unit">
-                      <input
-                        type="number"
-                        className="unit-price-input"
+                      <NumericCell
                         value={Math.round(unitPrice)}
-                        onChange={e => {
-                          const val = Math.max(0, Number(e.target.value));
-                          updateUnitPrice(ref.no, type, val);
-                        }}
+                        className="unit-price-input"
+                        onSave={val => updateUnitPrice(ref.no, type, val)}
                       />
                     </td>
                     {hasDemands ? monthDemands.map(dc => {
@@ -176,12 +210,10 @@ export default function ActivityInputTable({
                       const key = `${dc.id}-${ref.no}-${type}`;
                       return (
                         <td key={dc.id} className="cell-input">
-                          <input
-                            type="number"
-                            min={0}
+                          <NumericCell
                             value={count}
-                            onChange={e => updateActivity(dc.id, ref.no, type, Math.max(0, Number(e.target.value)))}
                             className={saving === key ? 'saving' : ''}
+                            onSave={val => updateActivity(dc.id, ref.no, type, val)}
                           />
                         </td>
                       );
