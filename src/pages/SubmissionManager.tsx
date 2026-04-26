@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { FiCheck, FiAlertCircle, FiXCircle, FiMessageSquare, FiChevronDown, FiChevronUp } from 'react-icons/fi';
+import { FiCheck, FiAlertCircle, FiXCircle, FiMessageSquare, FiChevronDown, FiChevronUp, FiExternalLink } from 'react-icons/fi';
 import { supabase, TABLES } from '../utils/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { createNotification, sendEmail, buildEmailHtml } from '../utils/notifications';
@@ -359,6 +359,27 @@ export default function SubmissionManager() {
                     </button>
                   </div>
                 </div>
+
+                {/* 증빙자료 링크 */}
+                {sub.evidence_links && Array.isArray(sub.evidence_links) && sub.evidence_links.length > 0 && (
+                  <div className="submission-evidence">
+                    <span className="submission-evidence-title">증빙자료 ({sub.evidence_links.length}건)</span>
+                    <div className="submission-evidence-links">
+                      {sub.evidence_links.map((link: { url: string; label: string }, idx: number) => (
+                        <a
+                          key={idx}
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="submission-evidence-link"
+                        >
+                          <FiExternalLink size={12} />
+                          {link.label}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* 심사 정보 (reviewed) */}
                 {sub.reviewed_at && (

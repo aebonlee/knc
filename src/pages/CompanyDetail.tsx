@@ -159,7 +159,7 @@ export default function CompanyDetail() {
   };
 
   // 관리자에게 제출
-  const submitForReview = async () => {
+  const submitForReview = async (evidenceLinks: { url: string; label: string }[]) => {
     if (!supabase || !id || !selectedMonth || !user) return;
     setSubmitting(true);
     try {
@@ -186,6 +186,7 @@ export default function CompanyDetail() {
         snapshot_id: snapData?.id || null,
         submitted_by: user.id,
         status: 'submitted',
+        evidence_links: evidenceLinks.length > 0 ? evidenceLinks : [],
       });
 
       // 관리자/담당자에게 인앱 알림 + 이메일 + SMS
@@ -196,18 +197,24 @@ export default function CompanyDetail() {
           .in('role', ['superadmin', 'manager']);
         if (admins && admins.length > 0) {
           const adminIds = admins.map((a: { user_id: string }) => a.user_id);
+          const evidenceNote = evidenceLinks.length > 0 ? ` (증빙자료 ${evidenceLinks.length}건 첨부)` : '';
           notifyMultiple(adminIds, {
             type: 'submission',
             title: '새로운 실적 제출',
-            message: `${company?.company_name} — ${selectedMonth} 데이터가 제출되었습니다.`,
+            message: `${company?.company_name} — ${selectedMonth} 데이터가 제출되었습니다.${evidenceNote}`,
             link: '/admin/submissions',
           });
         }
         // 이메일 + SMS
+        const evidenceHtml = evidenceLinks.length > 0
+          ? `<p style="margin-top:12px;"><strong>증빙자료 링크 (${evidenceLinks.length}건):</strong></p>
+             <ul style="margin:8px 0;">${evidenceLinks.map(l => `<li><a href="${l.url}">${l.label}</a></li>`).join('')}</ul>`
+          : '';
         notifyAdminsEmailSMS({
           subject: `[산업안전 RBF] 새로운 실적 제출 — ${company?.company_name}`,
           htmlBody: `
             <p><strong>${company?.company_name}</strong>에서 <strong>${selectedMonth}</strong> 실적 데이터를 제출했습니다.</p>
+            ${evidenceHtml}
             <p>제출 관리 페이지에서 검토해 주세요.</p>
             <p style="margin-top:20px;">
               <a href="https://knc.dreamitbiz.com/admin/submissions"
@@ -215,7 +222,7 @@ export default function CompanyDetail() {
                 제출 관리 바로가기
               </a>
             </p>`,
-          smsMessage: `[산업안전RBF] ${company?.company_name} ${selectedMonth} 실적이 제출되었습니다. 검토 부탁드립니다.`,
+          smsMessage: `[산업안전RBF] ${company?.company_name} ${selectedMonth} 실적이 제출되었습니다.${evidenceLinks.length > 0 ? ` (증빙 ${evidenceLinks.length}건)` : ''} 검토 부탁드립니다.`,
         });
       }
 

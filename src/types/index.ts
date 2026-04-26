@@ -127,6 +127,7 @@ export interface Submission {
   snapshot_id: string | null;
   submitted_by: string;
   status: SubmissionStatus;
+  evidence_links?: { url: string; label: string }[] | null;
   submitted_at: string;
   reviewed_at: string | null;
   reviewed_by: string | null;
