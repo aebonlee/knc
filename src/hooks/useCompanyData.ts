@@ -4,6 +4,7 @@ import { DEFAULT_REFERENCE_DATA } from '../data/referenceData';
 import type {
   Company, DemandCompany, Activity, ReferenceData,
   ProjectSettings, CompanyWithSavings, RiskSummary, ActivityType,
+  CompanyUnitPrice,
 } from '../types';
 
 // 1건당 절감단가
@@ -25,14 +26,22 @@ export const getWeight = (ref: ReferenceData, activityType: ActivityType): numbe
   }
 };
 
-// 기업 전체 절감액
-export const getCompanyTotal = (activities: Activity[], refData: ReferenceData[]): number => {
-  return activities.reduce((sum, act) => {
-    const ref = refData.find(r => r.no === act.risk_no);
-    if (!ref) return sum;
-    const weight = getWeight(ref, act.activity_type);
-    return sum + ref.social_cost * weight * act.activity_count;
-  }, 0);
+// 활동 1건의 절감액 (커스텀 단가 우선)
+export const getActivitySaving = (
+  act: Activity, refData: ReferenceData[], unitPrices: CompanyUnitPrice[] = []
+): number => {
+  const custom = unitPrices.find(u => u.risk_no === act.risk_no && u.activity_type === act.activity_type);
+  if (custom) return custom.unit_price * act.activity_count;
+  const ref = refData.find(r => r.no === act.risk_no);
+  if (!ref) return 0;
+  return ref.social_cost * getWeight(ref, act.activity_type) * act.activity_count;
+};
+
+// 기업 전체 절감액 (커스텀 단가 반영)
+export const getCompanyTotal = (
+  activities: Activity[], refData: ReferenceData[], unitPrices: CompanyUnitPrice[] = []
+): number => {
+  return activities.reduce((sum, act) => sum + getActivitySaving(act, refData, unitPrices), 0);
 };
 
 // 성과 판정 (달성률 = 총 절감액 ÷ 최대 성과목표 × 100)
@@ -73,6 +82,7 @@ export function useCompanyData() {
   const [demandCompanies, setDemandCompanies] = useState<DemandCompany[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [referenceData, setReferenceData] = useState<ReferenceData[]>(DEFAULT_REFERENCE_DATA);
+  const [unitPrices, setUnitPrices] = useState<CompanyUnitPrice[]>([]);
   const [settings, setSettings] = useState<ProjectSettings>(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
 
@@ -83,11 +93,12 @@ export function useCompanyData() {
     }
     setLoading(true);
     try {
-      const [compRes, demandRes, actRes, refRes, setRes] = await Promise.all([
+      const [compRes, demandRes, actRes, refRes, priceRes, setRes] = await Promise.all([
         supabase.from(TABLES.companies).select('*').order('company_no'),
         supabase.from(TABLES.demand_companies).select('*').order('demand_no'),
         supabase.from(TABLES.activities).select('*'),
         supabase.from(TABLES.reference_data).select('*').order('no'),
+        supabase.from(TABLES.company_unit_prices).select('*'),
         supabase.from(TABLES.project_settings).select('*').limit(1).single(),
       ]);
 
@@ -95,6 +106,7 @@ export function useCompanyData() {
       if (demandRes.data) setDemandCompanies(demandRes.data);
       if (actRes.data) setActivities(actRes.data);
       if (refRes.data && refRes.data.length > 0) setReferenceData(refRes.data);
+      if (priceRes.data) setUnitPrices(priceRes.data);
       if (setRes.data) setSettings(setRes.data);
     } catch (err) {
       console.error('Data fetch error:', err);
@@ -105,13 +117,14 @@ export function useCompanyData() {
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
-  // 기업별 절감액 계산
+  // 기업별 절감액 계산 (커스텀 단가 반영)
   const companiesWithSavings: CompanyWithSavings[] = companies.map(comp => {
     const compActivities = activities.filter(a => a.company_id === comp.id);
+    const compPrices = unitPrices.filter(u => u.company_id === comp.id);
     const compDemands = demandCompanies.filter(d => d.company_id === comp.id);
     return {
       ...comp,
-      total_saving: getCompanyTotal(compActivities, referenceData),
+      total_saving: getCompanyTotal(compActivities, referenceData, compPrices),
       demand_companies: compDemands,
     };
   });
@@ -122,37 +135,31 @@ export function useCompanyData() {
   // 성과 판정
   const performance = getPerformanceResult(totalSaving, settings);
 
-  // 활동유형별 절감액
+  // 활동유형별 절감액 (커스텀 단가 반영)
   const savingsByType = {
-    engineering: activities.reduce((sum, act) => {
-      if (act.activity_type !== 'engineering') return sum;
-      const ref = referenceData.find(r => r.no === act.risk_no);
-      return sum + (ref ? ref.social_cost * ref.weight_engineering * act.activity_count : 0);
-    }, 0),
-    ppe: activities.reduce((sum, act) => {
-      if (act.activity_type !== 'ppe') return sum;
-      const ref = referenceData.find(r => r.no === act.risk_no);
-      return sum + (ref ? ref.social_cost * ref.weight_ppe * act.activity_count : 0);
-    }, 0),
-    education: activities.reduce((sum, act) => {
-      if (act.activity_type !== 'education') return sum;
-      const ref = referenceData.find(r => r.no === act.risk_no);
-      return sum + (ref ? ref.social_cost * ref.weight_education * act.activity_count : 0);
-    }, 0),
+    engineering: activities
+      .filter(a => a.activity_type === 'engineering')
+      .reduce((sum, act) => sum + getActivitySaving(act, referenceData, unitPrices), 0),
+    ppe: activities
+      .filter(a => a.activity_type === 'ppe')
+      .reduce((sum, act) => sum + getActivitySaving(act, referenceData, unitPrices), 0),
+    education: activities
+      .filter(a => a.activity_type === 'education')
+      .reduce((sum, act) => sum + getActivitySaving(act, referenceData, unitPrices), 0),
   };
 
-  // 위험요인별 분석
+  // 위험요인별 분석 (커스텀 단가 반영)
   const riskSummary: RiskSummary[] = referenceData.map(ref => {
     const riskActivities = activities.filter(a => a.risk_no === ref.no);
     const engineering_total = riskActivities
       .filter(a => a.activity_type === 'engineering')
-      .reduce((s, a) => s + ref.social_cost * ref.weight_engineering * a.activity_count, 0);
+      .reduce((s, a) => s + getActivitySaving(a, referenceData, unitPrices), 0);
     const ppe_total = riskActivities
       .filter(a => a.activity_type === 'ppe')
-      .reduce((s, a) => s + ref.social_cost * ref.weight_ppe * a.activity_count, 0);
+      .reduce((s, a) => s + getActivitySaving(a, referenceData, unitPrices), 0);
     const education_total = riskActivities
       .filter(a => a.activity_type === 'education')
-      .reduce((s, a) => s + ref.social_cost * ref.weight_education * a.activity_count, 0);
+      .reduce((s, a) => s + getActivitySaving(a, referenceData, unitPrices), 0);
     return {
       risk_no: ref.no,
       risk_name: ref.risk_name,
@@ -164,7 +171,7 @@ export function useCompanyData() {
   });
 
   return {
-    companies, demandCompanies, activities, referenceData, settings,
+    companies, demandCompanies, activities, referenceData, unitPrices, settings,
     companiesWithSavings, totalSaving, performance, savingsByType, riskSummary,
     loading, refetch: fetchAll,
   };

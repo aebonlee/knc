@@ -3,7 +3,7 @@ import { useParams, Link, Navigate } from 'react-router-dom';
 import { FiArrowLeft, FiEdit2, FiPlus, FiTrash2, FiSave } from 'react-icons/fi';
 import { supabase, TABLES } from '../utils/supabase';
 import { DEFAULT_REFERENCE_DATA } from '../data/referenceData';
-import { getCompanyTotal } from '../hooks/useCompanyData';
+import { getWeight } from '../hooks/useCompanyData';
 import { useAuth } from '../contexts/AuthContext';
 import CompanySummary from '../components/company/CompanySummary';
 import CompanyForm from '../components/company/CompanyForm';
@@ -248,7 +248,15 @@ export default function CompanyDetail() {
     );
   }
 
-  const totalSaving = getCompanyTotal(activities, referenceData);
+  // 총 절감액: 커스텀 단가를 반영한 전체 월 합산
+  const totalSaving = activities.reduce((sum, act) => {
+    const custom = unitPrices.find(u => u.risk_no === act.risk_no && u.activity_type === act.activity_type);
+    if (custom) return sum + custom.unit_price * act.activity_count;
+    const ref = referenceData.find(r => r.no === act.risk_no);
+    if (!ref) return sum;
+    const weight = getWeight(ref, act.activity_type);
+    return sum + ref.social_cost * weight * act.activity_count;
+  }, 0);
   const currentMonthSaving = selectedMonth ? getMonthSaving(selectedMonth) : 0;
   const monthSnapshots = snapshots.filter(s => s.month === selectedMonth);
 
