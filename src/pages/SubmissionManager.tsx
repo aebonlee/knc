@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { FiCheck, FiAlertCircle, FiXCircle, FiMessageSquare, FiChevronDown, FiChevronUp } from 'react-icons/fi';
 import { supabase, TABLES } from '../utils/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { createNotification } from '../utils/notifications';
+import { createNotification, sendEmail, buildEmailHtml } from '../utils/notifications';
 import type { Submission, SubmissionComment, Company } from '../types';
 
 type StatusTab = 'all' | 'submitted' | 'approved' | 'revision' | 'rejected';
@@ -175,7 +175,7 @@ export default function SubmissionManager() {
         }
       }
 
-      // 3. 제출자에게 알림
+      // 3. 제출자에게 인앱 알림 + 이메일
       const sub = submissions.find(s => s.id === actionTarget);
       if (sub) {
         const typeLabel = actionType === 'approved' ? '승인' : actionType === 'revision' ? '보완요청' : '반려';
@@ -186,6 +186,34 @@ export default function SubmissionManager() {
           message: `${sub.company_name} — ${sub.month} 제출건이 ${typeLabel} 처리되었습니다.`,
           link: `/companies/${sub.company_id}`,
         });
+
+        // 제출자 이메일 조회 후 이메일 발송
+        if (supabase) {
+          const { data: submitter } = await supabase
+            .from('user_profiles')
+            .select('email')
+            .eq('id', sub.submitted_by)
+            .single();
+          if (submitter?.email) {
+            const commentText = actionComment.trim() ? `<p style="margin-top:12px;padding:12px;background:#f5f5f5;border-radius:6px;"><strong>코멘트:</strong> ${actionComment.trim()}</p>` : '';
+            sendEmail({
+              to: submitter.email,
+              subject: `[산업안전 RBF] ${sub.company_name} ${sub.month} 실적 ${typeLabel}`,
+              html: buildEmailHtml({
+                title: `실적 ${typeLabel} 알림`,
+                body: `
+                  <p><strong>${sub.company_name}</strong>의 <strong>${sub.month}</strong> 제출건이 <strong>${typeLabel}</strong> 처리되었습니다.</p>
+                  ${commentText}
+                  <p style="margin-top:20px;">
+                    <a href="https://knc.dreamitbiz.com/companies/${sub.company_id}"
+                       style="display:inline-block;padding:10px 24px;background:#0F2B5B;color:#fff;border-radius:6px;text-decoration:none;font-weight:600;">
+                      기업 페이지 바로가기
+                    </a>
+                  </p>`,
+              }),
+            });
+          }
+        }
       }
 
       closeAction();

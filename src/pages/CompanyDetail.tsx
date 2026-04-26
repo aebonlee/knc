@@ -5,7 +5,7 @@ import { supabase, TABLES } from '../utils/supabase';
 import { DEFAULT_REFERENCE_DATA } from '../data/referenceData';
 import { getWeight } from '../hooks/useCompanyData';
 import { useAuth } from '../contexts/AuthContext';
-import { notifyMultiple } from '../utils/notifications';
+import { notifyMultiple, notifyAdminsEmailSMS } from '../utils/notifications';
 import CompanySummary from '../components/company/CompanySummary';
 import CompanyForm from '../components/company/CompanyForm';
 import DemandCompanyManager from '../components/company/DemandCompanyManager';
@@ -188,7 +188,7 @@ export default function CompanyDetail() {
         status: 'submitted',
       });
 
-      // 관리자/담당자에게 알림
+      // 관리자/담당자에게 인앱 알림 + 이메일 + SMS
       if (supabase) {
         const { data: admins } = await supabase
           .from(TABLES.user_roles)
@@ -203,6 +203,20 @@ export default function CompanyDetail() {
             link: '/admin/submissions',
           });
         }
+        // 이메일 + SMS
+        notifyAdminsEmailSMS({
+          subject: `[산업안전 RBF] 새로운 실적 제출 — ${company?.company_name}`,
+          htmlBody: `
+            <p><strong>${company?.company_name}</strong>에서 <strong>${selectedMonth}</strong> 실적 데이터를 제출했습니다.</p>
+            <p>제출 관리 페이지에서 검토해 주세요.</p>
+            <p style="margin-top:20px;">
+              <a href="https://knc.dreamitbiz.com/admin/submissions"
+                 style="display:inline-block;padding:10px 24px;background:#0F2B5B;color:#fff;border-radius:6px;text-decoration:none;font-weight:600;">
+                제출 관리 바로가기
+              </a>
+            </p>`,
+          smsMessage: `[산업안전RBF] ${company?.company_name} ${selectedMonth} 실적이 제출되었습니다. 검토 부탁드립니다.`,
+        });
       }
 
       alert(`${selectedMonth} 데이터가 관리자에게 제출되었습니다.`);
