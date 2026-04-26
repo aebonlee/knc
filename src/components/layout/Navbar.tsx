@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { usePhase } from '../../contexts/PhaseContext';
 import { FiMenu, FiX, FiSun, FiMoon, FiLogOut, FiUser, FiEye, FiXCircle } from 'react-icons/fi';
 import NotificationBell from './NotificationBell';
 import { supabase, TABLES } from '../../utils/supabase';
@@ -20,7 +19,6 @@ const ROLE_BADGE: Record<string, { label: string; className: string }> = {
 export default function Navbar() {
   const { isLoggedIn, profile, isAdmin, kncRole, isSuperadmin, isCompanyMember, isPending, companyId, canEdit, impersonateCompanyId, setImpersonateCompany, signOut } = useAuth();
   const { theme, colorTheme, toggleTheme, setColorTheme } = useTheme();
-  const { phase, setPhase } = usePhase();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [colorOpen, setColorOpen] = useState(false);
@@ -107,23 +105,6 @@ export default function Navbar() {
           <span className="brand-k">2026</span>
           <span className="brand-dash">산업안전 RBF</span>
         </Link>
-
-        {isLoggedIn && !isPending && (
-          <div className="phase-toggle">
-            <button
-              className={`phase-btn ${phase === 1 ? 'active' : ''}`}
-              onClick={() => setPhase(1)}
-            >
-              1차
-            </button>
-            <button
-              className={`phase-btn ${phase === 2 ? 'active' : ''}`}
-              onClick={() => setPhase(2)}
-            >
-              2차
-            </button>
-          </div>
-        )}
 
         <button className="nav-toggle" onClick={() => setMenuOpen(!menuOpen)}>
           {menuOpen ? <FiX size={24} /> : <FiMenu size={24} />}

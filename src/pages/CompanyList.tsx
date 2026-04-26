@@ -2,15 +2,14 @@ import { useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { FiSearch, FiPlus, FiX } from 'react-icons/fi';
 import { useCompanyData, formatBillion } from '../hooks/useCompanyData';
-import { usePhase } from '../contexts/PhaseContext';
 import { useAuth } from '../contexts/AuthContext';
 import CompanyForm from '../components/company/CompanyForm';
 import type { SolutionType } from '../types';
 
 export default function CompanyList() {
-  const { phase } = usePhase();
   const { impersonateCompanyId } = useAuth();
-  const { companiesWithSavings, loading, refetch } = useCompanyData(phase);
+  // phase 필터 없이 전체 기업 표시
+  const { companiesWithSavings, loading, refetch } = useCompanyData();
 
   // 기업 모드 전환 시 해당 기업 상세로 리다이렉트
   if (impersonateCompanyId) {
