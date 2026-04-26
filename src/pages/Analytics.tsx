@@ -1,10 +1,12 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid,
   PieChart, Pie, Cell,
   RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
 } from 'recharts';
+import { FiDownload } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
+import * as XLSX from 'xlsx';
 import { useCompanyData, formatBillion, getActivitySaving } from '../hooks/useCompanyData';
 import { ACTIVITY_TYPE_LABELS } from '../data/referenceData';
 import type { SolutionType, CompanyWithSavings } from '../types';
@@ -167,15 +169,82 @@ export default function Analytics() {
     return [...filteredCompanies].sort((a, b) => b.total_saving - a.total_saving);
   }, [filteredCompanies]);
 
+  // --- Excel 다운로드 ---
+  const downloadExcel = useCallback(() => {
+    // Sheet 1: 기업별 절감액 순위
+    const rankingRows = rankedCompanies.map((comp, idx) => {
+      const compActs = filteredActivities.filter(a => a.company_id === comp.id);
+      let eng = 0, ppe = 0, edu = 0;
+      compActs.forEach(act => {
+        const saving = getActivitySaving(act, referenceData, unitPrices);
+        if (act.activity_type === 'engineering') eng += saving;
+        else if (act.activity_type === 'ppe') ppe += saving;
+        else edu += saving;
+      });
+      return {
+        '순위': idx + 1,
+        '기업명': comp.company_name,
+        '솔루션유형': comp.solution_type,
+        '수요기업수': comp.demand_companies.length,
+        '공학(원)': Math.round(eng),
+        '보호구(원)': Math.round(ppe),
+        '교육(원)': Math.round(edu),
+        '총 절감액(원)': Math.round(comp.total_saving),
+      };
+    });
+
+    // Sheet 2: 위험요인별 분석
+    const riskRows = referenceData.map(ref => {
+      const riskActs = filteredActivities.filter(a => a.risk_no === ref.no);
+      const companyIds = new Set(filteredCompanies.map(c => c.id));
+      const filteredRiskActs = riskActs.filter(a => companyIds.has(a.company_id));
+      let eng = 0, ppe = 0, edu = 0;
+      filteredRiskActs.forEach(act => {
+        const saving = getActivitySaving(act, referenceData, unitPrices);
+        if (act.activity_type === 'engineering') eng += saving;
+        else if (act.activity_type === 'ppe') ppe += saving;
+        else edu += saving;
+      });
+      return {
+        'No': ref.no,
+        '위험요인': ref.risk_name,
+        '사회비용(원)': ref.social_cost,
+        '공학(원)': Math.round(eng),
+        '보호구(원)': Math.round(ppe),
+        '교육(원)': Math.round(edu),
+        '합계(원)': Math.round(eng + ppe + edu),
+      };
+    });
+
+    const wb = XLSX.utils.book_new();
+    const ws1 = XLSX.utils.json_to_sheet(rankingRows);
+    const ws2 = XLSX.utils.json_to_sheet(riskRows);
+
+    // 열 너비 설정
+    ws1['!cols'] = [{ wch: 5 }, { wch: 20 }, { wch: 10 }, { wch: 10 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 18 }];
+    ws2['!cols'] = [{ wch: 5 }, { wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 18 }];
+
+    XLSX.utils.book_append_sheet(wb, ws1, '기업별 절감액');
+    XLSX.utils.book_append_sheet(wb, ws2, '위험요인별 분석');
+
+    const monthLabel = selectedMonth || '전체';
+    XLSX.writeFile(wb, `KNC_성과분석_${monthLabel}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  }, [rankedCompanies, filteredActivities, filteredCompanies, referenceData, unitPrices, selectedMonth]);
+
   if (loading) {
     return <div className="page-loading"><div className="spinner" /></div>;
   }
 
   return (
     <div className="page">
-      <div className="page-header">
-        <h1>성과 분석</h1>
-        <p>기업별 또는 솔루션 유형별로 절감 성과를 분석합니다</p>
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <h1>성과 분석</h1>
+          <p>기업별 또는 솔루션 유형별로 절감 성과를 분석합니다</p>
+        </div>
+        <button className="btn-primary btn-sm" onClick={downloadExcel} style={{ flexShrink: 0 }}>
+          <FiDownload size={14} /> Excel 다운로드
+        </button>
       </div>
 
       {/* Filter Bar */}

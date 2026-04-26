@@ -1,4 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
+import { FiDownload } from 'react-icons/fi';
+import * as XLSX from 'xlsx';
 import { useCompanyData, formatWon, formatBillion, getActivitySaving } from '../hooks/useCompanyData';
 import RiskBarChart from '../components/dashboard/RiskBarChart';
 import { ACTIVITY_TYPE_LABELS } from '../data/referenceData';
@@ -38,6 +40,43 @@ export default function RiskAnalysis() {
     });
   }, [filteredActivities, referenceData, unitPrices]);
 
+  const downloadExcel = useCallback(() => {
+    // Sheet 1: 위험요인별 상세
+    const riskRows = riskSummary.map(r => ({
+      'No': r.risk_no,
+      '위험요인': r.risk_name,
+      '사회비용(원)': referenceData[r.risk_no - 1]?.social_cost ?? 0,
+      '공학(원)': Math.round(r.engineering_total),
+      '보호구(원)': Math.round(r.ppe_total),
+      '교육(원)': Math.round(r.education_total),
+      '합계(원)': Math.round(r.total_saving),
+    }));
+
+    // Sheet 2: 기업×위험요인 히트맵
+    const hmRows = companiesWithSavings.slice(0, 20).map(comp => {
+      const compActs = filteredActivities.filter(a => a.company_id === comp.id);
+      const row: Record<string, string | number> = { '기업명': comp.company_name };
+      referenceData.forEach(ref => {
+        const refActs = compActs.filter(a => a.risk_no === ref.no);
+        row[ref.risk_name] = Math.round(refActs.reduce((s, a) => s + getActivitySaving(a, referenceData, unitPrices), 0));
+      });
+      return row;
+    });
+
+    const wb = XLSX.utils.book_new();
+    const ws1 = XLSX.utils.json_to_sheet(riskRows);
+    ws1['!cols'] = [{ wch: 5 }, { wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 18 }];
+    XLSX.utils.book_append_sheet(wb, ws1, '위험요인별 분석');
+
+    if (hmRows.length > 0) {
+      const ws2 = XLSX.utils.json_to_sheet(hmRows);
+      XLSX.utils.book_append_sheet(wb, ws2, '히트맵 데이터');
+    }
+
+    const monthLabel = selectedMonth || '전체';
+    XLSX.writeFile(wb, `KNC_위험요인분석_${monthLabel}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  }, [riskSummary, companiesWithSavings, filteredActivities, referenceData, unitPrices, selectedMonth]);
+
   if (loading) {
     return <div className="page-loading"><div className="spinner" /></div>;
   }
@@ -56,9 +95,14 @@ export default function RiskAnalysis() {
 
   return (
     <div className="page">
-      <div className="page-header">
-        <h1>위험요인별 분석</h1>
-        <p>13개 위험요인에 대한 전체 기업 현황</p>
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <h1>위험요인별 분석</h1>
+          <p>13개 위험요인에 대한 전체 기업 현황</p>
+        </div>
+        <button className="btn-primary btn-sm" onClick={downloadExcel} style={{ flexShrink: 0 }}>
+          <FiDownload size={14} /> Excel 다운로드
+        </button>
       </div>
 
       <div className="analytics-filter-bar" style={{ marginBottom: 16 }}>
