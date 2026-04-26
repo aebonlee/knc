@@ -60,7 +60,6 @@ export default function Home() {
   const { phase } = usePhase();
   const [dashPhase, setDashPhase] = useState<number>(phase);
   const [dashMonths, setDashMonths] = useState<string[]>([]);
-  const [monthPanelOpen, setMonthPanelOpen] = useState(false);
   const [selectedCompanyId, setSelectedCompanyId] = useState('');
 
   const phaseArg = dashPhase === 0 ? undefined : dashPhase;
@@ -127,52 +126,25 @@ export default function Home() {
           ))}
         </div>
 
-        <div className="dash-month-multi">
-          <button
-            className="dash-month-trigger"
-            onClick={() => setMonthPanelOpen(!monthPanelOpen)}
-          >
-            {dashMonths.length === 0
-              ? '전체 월'
-              : `${dashMonths.length}개월 선택`}
-            <span className="multi-select-arrow">{monthPanelOpen ? '▲' : '▼'}</span>
-          </button>
-          {monthPanelOpen && (
-            <div className="dash-month-dropdown">
-              <div className="dash-month-quick">
-                <button onClick={() => setDashMonths([])}>전체</button>
-                {[[1,3],[4,6],[7,9],[10,12]].map(([s,e]) => {
-                  const range = allMonths.filter(m => {
-                    const mon = parseInt(m.split('-')[1], 10);
-                    return mon >= s && mon <= e;
-                  });
-                  if (range.length === 0) return null;
-                  return (
-                    <button key={s} onClick={() => setDashMonths(range)}>
-                      {s}~{e}월
-                    </button>
-                  );
-                })}
-                <button onClick={() => {
-                  if (dashMonths.length === allMonths.length) setDashMonths([]);
-                  else setDashMonths([...allMonths]);
-                }}>
-                  {dashMonths.length === allMonths.length ? '해제' : '전체 선택'}
-                </button>
-              </div>
-              <div className="dash-month-list">
-                {allMonths.map(m => (
-                  <label key={m} className="dash-month-item">
-                    <input
-                      type="checkbox"
-                      checked={dashMonths.includes(m)}
-                      onChange={() => toggleMonth(m)}
-                    />
-                    {m}
-                  </label>
-                ))}
-              </div>
-            </div>
+        <div className="dash-month-row">
+          {allMonths.map(m => {
+            const mon = m.split('-')[1];
+            const checked = dashMonths.includes(m);
+            return (
+              <label key={m} className={`dash-month-chip${checked ? ' active' : ''}`}>
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() => toggleMonth(m)}
+                />
+                {parseInt(mon, 10)}월
+              </label>
+            );
+          })}
+          {dashMonths.length > 0 && (
+            <button className="dash-month-clear" onClick={() => setDashMonths([])}>
+              초기화
+            </button>
           )}
         </div>
       </div>
