@@ -8,6 +8,7 @@ interface UserRow {
   user_id: string;
   email: string;
   display_name: string;
+  phone: string | null;
   role: KncRole;
   company_id: string | null;
   company_name: string | null;
@@ -18,6 +19,7 @@ interface PendingUser {
   id: string;
   email: string;
   display_name: string;
+  phone: string | null;
   created_at: string;
 }
 
@@ -61,11 +63,11 @@ export default function UserManagement() {
 
       // 역할 배정된 사용자
       const assignedUserIds = roles.map(r => r.user_id);
-      let assignedProfiles: { id: string; email: string; display_name: string }[] = [];
+      let assignedProfiles: { id: string; email: string; display_name: string; phone: string | null }[] = [];
       if (assignedUserIds.length > 0) {
         const { data } = await supabase
           .from('user_profiles')
-          .select('id, email, display_name')
+          .select('id, email, display_name, phone')
           .in('id', assignedUserIds);
         if (data) assignedProfiles = data;
       }
@@ -78,6 +80,7 @@ export default function UserManagement() {
           user_id: r.user_id,
           email: p?.email || '',
           display_name: p?.display_name || '',
+          phone: p?.phone || null,
           role: r.role,
           company_id: r.company_id,
           company_name: r.company_id ? (compMap.get(r.company_id) || '-') : null,
@@ -92,7 +95,7 @@ export default function UserManagement() {
       // 승인 대기 사용자: knc 사이트를 방문했지만 역할이 없는 사용자
       const { data: allVisitors } = await supabase
         .from('user_profiles')
-        .select('id, email, display_name, created_at')
+        .select('id, email, display_name, phone, created_at')
         .contains('visited_sites', ['knc']);
 
       if (allVisitors) {
@@ -313,18 +316,20 @@ export default function UserManagement() {
               <tr>
                 <th>이메일</th>
                 <th>이름</th>
+                <th>연락처</th>
                 <th>가입일</th>
                 <th>승인</th>
               </tr>
             </thead>
             <tbody>
               {filteredPending.length === 0 ? (
-                <tr><td colSpan={4} className="table-empty">승인 대기 중인 사용자가 없습니다</td></tr>
+                <tr><td colSpan={5} className="table-empty">승인 대기 중인 사용자가 없습니다</td></tr>
               ) : (
                 filteredPending.map(u => (
                   <tr key={u.id}>
                     <td>{u.email}</td>
                     <td>{u.display_name || '-'}</td>
+                    <td>{u.phone || '-'}</td>
                     <td className="text-muted">{new Date(u.created_at).toLocaleDateString('ko-KR')}</td>
                     <td>
                       {approving === u.id ? (
@@ -391,6 +396,7 @@ export default function UserManagement() {
               <tr>
                 <th>이메일</th>
                 <th>이름</th>
+                <th>연락처</th>
                 <th>역할</th>
                 <th>기업</th>
                 <th>등록일</th>
@@ -399,12 +405,13 @@ export default function UserManagement() {
             </thead>
             <tbody>
               {filteredAssigned.length === 0 ? (
-                <tr><td colSpan={6} className="table-empty">배정된 사용자가 없습니다</td></tr>
+                <tr><td colSpan={7} className="table-empty">배정된 사용자가 없습니다</td></tr>
               ) : (
                 filteredAssigned.map(u => (
                   <tr key={u.id}>
                     <td>{u.email}</td>
                     <td>{u.display_name || '-'}</td>
+                    <td>{u.phone || '-'}</td>
                     <td>
                       <select
                         value={u.role}
