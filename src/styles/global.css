@@ -3763,11 +3763,33 @@ th:last-child .formula-balloon::after,
   color: var(--danger);
 }
 
-.snap-evidence-section .snap-submit-btn {
+.snap-evidence-actions {
+  display: flex;
+  gap: 10px;
   margin-top: 12px;
-  width: 100%;
+}
+.snap-evidence-actions .snap-submit-btn {
+  flex: 1;
   justify-content: center;
 }
+.snap-evidence-update-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 20px;
+  background: #0284C7;
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-xs);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.snap-evidence-update-btn:hover:not(:disabled) { background: #0369A1; }
+.snap-evidence-update-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
 /* =====================================================
    Submission Manager: Evidence Links Display

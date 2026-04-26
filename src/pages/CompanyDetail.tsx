@@ -39,6 +39,7 @@ export default function CompanyDetail() {
   const [savingSnapshot, setSavingSnapshot] = useState(false);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [updatingEvidence, setUpdatingEvidence] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!supabase || !id) return;
@@ -251,6 +252,26 @@ export default function CompanyDetail() {
       alert('제출 취소 중 오류가 발생했습니다.');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  // 기존 제출의 증빙자료 업데이트
+  const updateEvidence = async (evidenceLinks: { url: string; label: string }[]) => {
+    if (!supabase || !selectedMonth) return;
+    const sub = submissions.find(s => s.month === selectedMonth);
+    if (!sub) return;
+    setUpdatingEvidence(true);
+    try {
+      await supabase.from(TABLES.submissions).update({
+        evidence_links: evidenceLinks,
+      }).eq('id', sub.id);
+      alert('증빙자료가 업데이트되었습니다.');
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      alert('증빙자료 업데이트 중 오류가 발생했습니다.');
+    } finally {
+      setUpdatingEvidence(false);
     }
   };
 
@@ -467,6 +488,8 @@ export default function CompanyDetail() {
             onSubmit={submitForReview}
             cancelling={submitting}
             onCancel={cancelSubmission}
+            updatingEvidence={updatingEvidence}
+            onUpdateEvidence={updateEvidence}
           />
         </div>
       ) : (
