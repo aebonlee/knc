@@ -93,15 +93,7 @@ export default function ActivityInputTable({
   }, [companyId, unitPrices, onUnitPriceChanged]);
 
   const activityTypes: ActivityType[] = ['engineering', 'ppe', 'education'];
-
-  if (monthDemands.length === 0) {
-    return (
-      <div className="activity-table-wrap">
-        <h4>활동 횟수 입력 <span className="text-muted" style={{ fontWeight: 400, fontSize: '0.8rem' }}>({month})</span></h4>
-        <p className="text-muted">먼저 수요기업을 추가해주세요.</p>
-      </div>
-    );
-  }
+  const hasDemands = monthDemands.length > 0;
 
   const getRiskSubtotal = (riskNo: number, type: ActivityType) => {
     const price = getUnitPrice(riskNo, type);
@@ -135,9 +127,11 @@ export default function ActivityInputTable({
                   <span className="formula-balloon">= 사회비용 × 가중치{'\n'}(공학 0.70 / 보호구 0.15 / 교육 0.15)</span>
                 </span>
               </th>
-              {monthDemands.map(dc => (
+              {hasDemands ? monthDemands.map(dc => (
                 <th key={dc.id}>{dc.demand_name}</th>
-              ))}
+              )) : (
+                <th style={{ color: 'var(--text-muted)', fontWeight: 400, fontStyle: 'italic' }}>수요기업 추가 필요</th>
+              )}
               <th rowSpan={2}>
                 소계(원)
                 <span className="formula-tooltip-wrap">
@@ -177,7 +171,7 @@ export default function ActivityInputTable({
                         }}
                       />
                     </td>
-                    {monthDemands.map(dc => {
+                    {hasDemands ? monthDemands.map(dc => {
                       const count = getActivityCount(dc.id, ref.no, type);
                       const key = `${dc.id}-${ref.no}-${type}`;
                       return (
@@ -191,7 +185,9 @@ export default function ActivityInputTable({
                           />
                         </td>
                       );
-                    })}
+                    }) : (
+                      <td className="cell-input" style={{ color: 'var(--text-muted)', textAlign: 'center' }}>-</td>
+                    )}
                     <td className="cell-subtotal">{formatWon(rowSubtotal)}</td>
                   </tr>
                 );
@@ -200,7 +196,7 @@ export default function ActivityInputTable({
           </tbody>
           <tfoot>
             <tr className="grand-total-row">
-              <td colSpan={3 + monthDemands.length + 1} className="text-right">
+              <td colSpan={3 + (hasDemands ? monthDemands.length : 1) + 1} className="text-right">
                 <strong>
                   전체 합계
                   <span className="formula-tooltip-wrap" style={{ marginLeft: 4 }}>
