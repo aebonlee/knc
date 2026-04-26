@@ -19,6 +19,9 @@ interface AuthContextValue {
   isCompanyMember: boolean;
   isPending: boolean;
   canEdit: boolean;
+  // 기업 모드 전환 (관리자 전용)
+  impersonateCompanyId: string | null;
+  setImpersonateCompany: (id: string | null) => void;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -36,6 +39,8 @@ const AuthContext = createContext<AuthContextValue>({
   isCompanyMember: false,
   isPending: false,
   canEdit: false,
+  impersonateCompanyId: null,
+  setImpersonateCompany: () => {},
   signOut: async () => {},
   refreshProfile: async () => {},
 });
@@ -47,6 +52,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [kncUserRole, setKncUserRole] = useState<KncUserRole | null>(null);
   const [loading, setLoading] = useState(true);
+  const [impersonateCompanyId, setImpersonateCompanyId] = useState<string | null>(null);
+
+  const setImpersonateCompany = (id: string | null) => {
+    setImpersonateCompanyId(id);
+  };
 
   const loadProfile = useCallback(async (authUser: User) => {
     if (!supabase || !authUser) {
@@ -187,6 +197,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAdmin,
         kncRole, companyId,
         isSuperadmin, isManager, isCompanyMember, isPending, canEdit,
+        impersonateCompanyId,
+        setImpersonateCompany,
         signOut: handleSignOut,
         refreshProfile,
       }}

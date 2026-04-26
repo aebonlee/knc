@@ -9,10 +9,10 @@ import MonthlyTrendChart from '../components/dashboard/MonthlyTrendChart';
 
 export default function CompanyDashboard() {
   const { id } = useParams<{ id: string }>();
-  const { isCompanyMember, companyId } = useAuth();
+  const { isCompanyMember, companyId, impersonateCompanyId } = useAuth();
 
-  // company_member가 다른 기업 접근 시 리다이렉트
-  if (isCompanyMember && companyId && id !== companyId) {
+  // company_member가 다른 기업 접근 시 리다이렉트 (impersonate 모드 제외)
+  if (!impersonateCompanyId && isCompanyMember && companyId && id !== companyId) {
     return <Navigate to={`/companies/${companyId}/dashboard`} replace />;
   }
 

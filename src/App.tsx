@@ -50,8 +50,12 @@ function PendingGuard({ children }: { children: ReactNode }) {
 }
 
 function HomeRedirect() {
-  const { loading, isCompanyMember, companyId } = useAuth();
+  const { loading, isCompanyMember, companyId, impersonateCompanyId } = useAuth();
   if (loading) return <Loading />;
+  // 기업 모드 전환 활성 시 해당 기업 대시보드로 리다이렉트
+  if (impersonateCompanyId) {
+    return <Navigate to={`/companies/${impersonateCompanyId}/dashboard`} replace />;
+  }
   if (isCompanyMember && companyId) {
     return <Navigate to={`/companies/${companyId}/dashboard`} replace />;
   }

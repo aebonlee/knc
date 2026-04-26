@@ -3969,3 +3969,76 @@ html[data-theme="dark"] .submission-evidence-link {
   .snap-submission-banner { flex-direction: column; align-items: flex-start; }
   .snap-evidence-inputs { flex-direction: column; }
 }
+
+/* =====================================================
+   기업 모드 전환 (Impersonate)
+   ===================================================== */
+.impersonate-bar {
+  position: sticky;
+  top: 0;
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #F97316;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.impersonate-bar-close {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 12px;
+  padding: 3px 10px;
+  border: 1.5px solid rgba(255,255,255,0.6);
+  border-radius: 4px;
+  background: transparent;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.impersonate-bar-close:hover {
+  background: rgba(255,255,255,0.2);
+  border-color: #fff;
+}
+
+.impersonate-select {
+  padding: 4px 8px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: var(--bg-card);
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  max-width: 160px;
+  transition: var(--transition);
+}
+.impersonate-select:hover,
+.impersonate-select:focus {
+  border-color: #F97316;
+  outline: none;
+}
+
+.navbar-impersonate {
+  border-top: 3px solid #F97316;
+}
+
+/* 대시보드 월 체크박스 — disabled 스타일 */
+.dash-month-check.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.dash-month-check.disabled input[type="checkbox"] {
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .impersonate-bar { font-size: 0.78rem; gap: 4px; padding: 6px 10px; }
+  .impersonate-select { max-width: 120px; font-size: 0.72rem; }
+}

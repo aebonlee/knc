@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { usePhase } from '../../contexts/PhaseContext';
-import { FiMenu, FiX, FiSun, FiMoon, FiLogOut, FiUser } from 'react-icons/fi';
+import { FiMenu, FiX, FiSun, FiMoon, FiLogOut, FiUser, FiEye, FiXCircle } from 'react-icons/fi';
 import NotificationBell from './NotificationBell';
+import { supabase, TABLES } from '../../utils/supabase';
 import site from '../../config/site';
+import type { Company } from '../../types';
 
 const COLOR_THEMES = site.colors as { name: string; color: string }[];
 
@@ -16,18 +18,37 @@ const ROLE_BADGE: Record<string, { label: string; className: string }> = {
 };
 
 export default function Navbar() {
-  const { isLoggedIn, profile, isAdmin, kncRole, isSuperadmin, isCompanyMember, isPending, companyId, signOut } = useAuth();
+  const { isLoggedIn, profile, isAdmin, kncRole, isSuperadmin, isCompanyMember, isPending, companyId, canEdit, impersonateCompanyId, setImpersonateCompany, signOut } = useAuth();
   const { theme, colorTheme, toggleTheme, setColorTheme } = useTheme();
   const { phase, setPhase } = usePhase();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [colorOpen, setColorOpen] = useState(false);
+  const [companies, setCompanies] = useState<Company[]>([]);
+
+  // 관리자일 때 기업 목록 로드 (기업 모드 전환용)
+  useEffect(() => {
+    if (!canEdit || !supabase) return;
+    supabase.from(TABLES.companies).select('id, company_name, company_no').order('company_no')
+      .then(({ data }) => { if (data) setCompanies(data as Company[]); });
+  }, [canEdit]);
+
+  const impersonatedCompany = companies.find(c => c.id === impersonateCompanyId);
 
   // 역할별 내비게이션 아이템
   const getNavItems = () => {
     // 승인 대기 중이면 공개 메뉴만
     if (isPending) {
       return [
+        { path: '/about', label: '이용안내' },
+        { path: '/formulas', label: '산출기준' },
+      ];
+    }
+    // 기업 모드 전환 활성 시 — 기업회원용 메뉴
+    if (impersonateCompanyId) {
+      return [
+        { path: `/companies/${impersonateCompanyId}/dashboard`, label: '내 기업 대시보드' },
+        { path: `/companies/${impersonateCompanyId}`, label: '데이터 입력' },
         { path: '/about', label: '이용안내' },
         { path: '/formulas', label: '산출기준' },
       ];
@@ -71,7 +92,18 @@ export default function Navbar() {
     : kncRole ? ROLE_BADGE[kncRole] : null;
 
   return (
-    <nav className="navbar">
+    <>
+    {/* 기업 모드 전환 배너 */}
+    {impersonateCompanyId && impersonatedCompany && (
+      <div className="impersonate-bar">
+        <FiEye size={16} />
+        <strong>{impersonatedCompany.company_name}</strong> 기업 모드 보기 중
+        <button className="impersonate-bar-close" onClick={() => setImpersonateCompany(null)}>
+          <FiXCircle size={16} /> 해제
+        </button>
+      </div>
+    )}
+    <nav className={`navbar${impersonateCompanyId ? ' navbar-impersonate' : ''}`}>
       <div className="nav-container">
         <Link to="/" className="nav-brand">
           <span className="brand-k">2026</span>
@@ -126,6 +158,23 @@ export default function Navbar() {
           </div>
 
           <div className="nav-actions">
+            {/* 기업 모드 전환 드롭다운 (관리자 전용) */}
+            {canEdit && companies.length > 0 && (
+              <select
+                className="impersonate-select"
+                value={impersonateCompanyId || ''}
+                onChange={e => setImpersonateCompany(e.target.value || null)}
+                title="기업 모드 전환"
+              >
+                <option value="">기업 모드 ▾</option>
+                {companies.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.company_no}. {c.company_name}
+                  </option>
+                ))}
+              </select>
+            )}
+
             {/* Color picker */}
             <div className="color-picker-wrap">
               <button
@@ -178,5 +227,6 @@ export default function Navbar() {
         </div>
       </div>
     </nav>
+    </>
   );
 }

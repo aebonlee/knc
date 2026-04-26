@@ -56,6 +56,13 @@ function CompanyView({ companyId }: { companyId: string }) {
   );
 }
 
+// Phase별 월 그룹핑 상수
+const PHASE_MONTHS: Record<number, number[]> = {
+  1: [4, 5, 6, 7],
+  2: [8, 9, 10, 11, 12],
+  0: [4, 5, 6, 7, 8, 9, 10, 11, 12],
+};
+
 export default function Home() {
   const { phase } = usePhase();
   const [dashPhase, setDashPhase] = useState<number>(phase);
@@ -127,16 +134,23 @@ export default function Home() {
         </div>
 
         <div className="dash-month-row">
-          {allMonths.map(m => {
-            const mon = m.split('-')[1];
+          {PHASE_MONTHS[dashPhase].map(mon => {
+            const year = new Date().getFullYear();
+            const key = `${year}-${String(mon).padStart(2, '0')}`;
+            const hasData = allMonths.includes(key);
             return (
-              <label key={m} className="dash-month-check">
+              <label
+                key={key}
+                className={`dash-month-check${!hasData ? ' disabled' : ''}`}
+                title={!hasData ? '데이터 없음' : ''}
+              >
                 <input
                   type="checkbox"
-                  checked={dashMonths.includes(m)}
-                  onChange={() => toggleMonth(m)}
+                  checked={dashMonths.includes(key)}
+                  onChange={() => toggleMonth(key)}
+                  disabled={!hasData}
                 />
-                {parseInt(mon, 10)}월
+                {mon}월
               </label>
             );
           })}
