@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FiEdit2 } from 'react-icons/fi';
 import { useCompanyData } from '../hooks/useCompanyData';
+import { usePhase } from '../contexts/PhaseContext';
 import { useCompanyDashboard } from '../hooks/useCompanyDashboard';
 import KpiCards from '../components/dashboard/KpiCards';
 import CompanyKpiCards from '../components/dashboard/CompanyKpiCards';
@@ -56,11 +57,12 @@ function CompanyView({ companyId }: { companyId: string }) {
 }
 
 export default function Home() {
+  const { phase } = usePhase();
   const [selectedCompanyId, setSelectedCompanyId] = useState('');
   const {
     companies, companiesWithSavings, totalSaving, performance, settings,
     savingsByType, riskSummary, loading,
-  } = useCompanyData();
+  } = useCompanyData(phase);
 
   if (loading) {
     return <div className="page-loading"><div className="spinner" /></div>;

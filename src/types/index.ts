@@ -41,6 +41,7 @@ export interface Company {
   sub_manager_phone: string | null;
   budget: number | null;
   solution_type: SolutionType;
+  phase: number;
   created_at: string;
 }
 
@@ -70,6 +71,7 @@ export interface ProjectSettings {
   total_investment: number;
   underperformance_threshold: number;
   max_target: number;
+  phase: number;
   updated_at: string;
 }
 

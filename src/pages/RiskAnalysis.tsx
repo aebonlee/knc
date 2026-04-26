@@ -2,12 +2,14 @@ import { useState, useMemo, useCallback } from 'react';
 import { FiDownload } from 'react-icons/fi';
 import * as XLSX from 'xlsx';
 import { useCompanyData, formatWon, formatBillion, getActivitySaving } from '../hooks/useCompanyData';
+import { usePhase } from '../contexts/PhaseContext';
 import RiskBarChart from '../components/dashboard/RiskBarChart';
 import { ACTIVITY_TYPE_LABELS } from '../data/referenceData';
 import type { RiskSummary } from '../types';
 
 export default function RiskAnalysis() {
-  const { referenceData, companiesWithSavings, activities, unitPrices, loading } = useCompanyData();
+  const { phase } = usePhase();
+  const { referenceData, companiesWithSavings, activities, unitPrices, loading } = useCompanyData(phase);
   const [selectedMonth, setSelectedMonth] = useState<string>('');
 
   const availableMonths = useMemo(() => {

@@ -13,6 +13,7 @@ const DEFAULT_SETTINGS: ProjectSettings = {
   total_investment: 3_300_000_000,
   underperformance_threshold: 3_500_000_000,
   max_target: 6_600_000_000,
+  phase: 1,
   updated_at: new Date().toISOString(),
 };
 

@@ -8,6 +8,7 @@ import { FiDownload } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import { useCompanyData, formatBillion, getActivitySaving } from '../hooks/useCompanyData';
+import { usePhase } from '../contexts/PhaseContext';
 import { ACTIVITY_TYPE_LABELS } from '../data/referenceData';
 import type { SolutionType, CompanyWithSavings } from '../types';
 
@@ -26,9 +27,10 @@ const formatTooltip = (value: number) =>
   new Intl.NumberFormat('ko-KR').format(Math.round(value)) + '원';
 
 export default function Analytics() {
+  const { phase } = usePhase();
   const {
     companiesWithSavings, activities, referenceData, unitPrices, loading,
-  } = useCompanyData();
+  } = useCompanyData(phase);
 
   const [mode, setMode] = useState<AnalyticsMode>('company');
   const [selectedCompanyIds, setSelectedCompanyIds] = useState<string[]>([]);

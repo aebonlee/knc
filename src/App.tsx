@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { PhaseProvider } from './contexts/PhaseContext';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import { lazy, Suspense, type ReactNode } from 'react';
@@ -82,6 +83,7 @@ export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
+        <PhaseProvider>
         <Router>
           <div className="app-layout">
             <Navbar />
@@ -91,6 +93,7 @@ export default function App() {
             <Footer />
           </div>
         </Router>
+        </PhaseProvider>
       </AuthProvider>
     </ThemeProvider>
   );

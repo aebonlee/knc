@@ -170,6 +170,33 @@ a { color: inherit; text-decoration: none; }
   font-size: 0.85em;
 }
 
+/* 사업 차수 토글 */
+.phase-toggle {
+  display: flex;
+  gap: 0;
+  margin-left: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.phase-btn {
+  padding: 4px 12px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.phase-btn + .phase-btn { border-left: 1px solid var(--border); }
+.phase-btn.active {
+  background: var(--primary);
+  color: #fff;
+}
+.phase-btn:hover:not(.active) { background: var(--border-light); }
+
 .nav-toggle {
   display: none;
   background: none;

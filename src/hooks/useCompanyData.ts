@@ -74,16 +74,17 @@ const DEFAULT_SETTINGS: ProjectSettings = {
   total_investment: 3_300_000_000,
   underperformance_threshold: 3_500_000_000,
   max_target: 6_600_000_000,
+  phase: 1,
   updated_at: new Date().toISOString(),
 };
 
-export function useCompanyData() {
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [demandCompanies, setDemandCompanies] = useState<DemandCompany[]>([]);
-  const [activities, setActivities] = useState<Activity[]>([]);
+export function useCompanyData(phaseFilter?: number) {
+  const [allCompanies, setAllCompanies] = useState<Company[]>([]);
+  const [allDemandCompanies, setAllDemandCompanies] = useState<DemandCompany[]>([]);
+  const [allActivities, setAllActivities] = useState<Activity[]>([]);
   const [referenceData, setReferenceData] = useState<ReferenceData[]>(DEFAULT_REFERENCE_DATA);
   const [unitPrices, setUnitPrices] = useState<CompanyUnitPrice[]>([]);
-  const [settings, setSettings] = useState<ProjectSettings>(DEFAULT_SETTINGS);
+  const [allSettings, setAllSettings] = useState<ProjectSettings[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchAll = useCallback(async () => {
@@ -99,15 +100,15 @@ export function useCompanyData() {
         supabase.from(TABLES.activities).select('*'),
         supabase.from(TABLES.reference_data).select('*').order('no'),
         supabase.from(TABLES.company_unit_prices).select('*'),
-        supabase.from(TABLES.project_settings).select('*').limit(1).single(),
+        supabase.from(TABLES.project_settings).select('*').order('phase'),
       ]);
 
-      if (compRes.data) setCompanies(compRes.data);
-      if (demandRes.data) setDemandCompanies(demandRes.data);
-      if (actRes.data) setActivities(actRes.data);
+      if (compRes.data) setAllCompanies(compRes.data);
+      if (demandRes.data) setAllDemandCompanies(demandRes.data);
+      if (actRes.data) setAllActivities(actRes.data);
       if (refRes.data && refRes.data.length > 0) setReferenceData(refRes.data);
       if (priceRes.data) setUnitPrices(priceRes.data);
-      if (setRes.data) setSettings(setRes.data);
+      if (setRes.data) setAllSettings(Array.isArray(setRes.data) ? setRes.data : [setRes.data]);
     } catch (err) {
       console.error('Data fetch error:', err);
     } finally {
@@ -116,6 +117,15 @@ export function useCompanyData() {
   }, []);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  // phase 필터 적용
+  const companies = phaseFilter
+    ? allCompanies.filter(c => (c.phase ?? 1) === phaseFilter)
+    : allCompanies;
+  const companyIds = new Set(companies.map(c => c.id));
+  const demandCompanies = allDemandCompanies.filter(d => companyIds.has(d.company_id));
+  const activities = allActivities.filter(a => companyIds.has(a.company_id));
+  const settings = allSettings.find(s => s.phase === (phaseFilter || 1)) || DEFAULT_SETTINGS;
 
   // 기업별 절감액 계산 (커스텀 단가 반영)
   const companiesWithSavings: CompanyWithSavings[] = companies.map(comp => {

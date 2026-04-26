@@ -2,12 +2,14 @@ import { useState } from 'react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { useCompanyData } from '../hooks/useCompanyData';
+import { usePhase } from '../contexts/PhaseContext';
 import PdfReport from '../components/report/PdfReport';
 
 export default function Report() {
+  const { phase } = usePhase();
   const {
     companiesWithSavings, riskSummary, totalSaving, performance, settings, loading,
-  } = useCompanyData();
+  } = useCompanyData(phase);
   const [generating, setGenerating] = useState(false);
 
   const handleGeneratePdf = async (element: HTMLElement) => {

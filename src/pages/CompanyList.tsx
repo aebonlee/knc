@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FiSearch, FiPlus, FiX } from 'react-icons/fi';
 import { useCompanyData, formatBillion } from '../hooks/useCompanyData';
+import { usePhase } from '../contexts/PhaseContext';
 import CompanyForm from '../components/company/CompanyForm';
 import type { SolutionType } from '../types';
 
 export default function CompanyList() {
-  const { companiesWithSavings, loading, refetch } = useCompanyData();
+  const { phase } = usePhase();
+  const { companiesWithSavings, loading, refetch } = useCompanyData(phase);
   const [filter, setFilter] = useState<SolutionType | ''>('');
   const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
