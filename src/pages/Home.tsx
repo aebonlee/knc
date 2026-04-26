@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FiEdit2 } from 'react-icons/fi';
-import { useCompanyData } from '../hooks/useCompanyData';
+import { useCompanyData, getActivitySaving, formatBillion } from '../hooks/useCompanyData';
 import { useCompanyDashboard } from '../hooks/useCompanyDashboard';
 import KpiCards from '../components/dashboard/KpiCards';
 import CompanyKpiCards from '../components/dashboard/CompanyKpiCards';
@@ -72,7 +72,8 @@ export default function Home() {
 
   const {
     companies, companiesWithSavings, totalSaving, performance, settings,
-    savingsByType, riskSummary, allMonths, loading,
+    savingsByType, riskSummary, allMonths, activities, referenceData, unitPrices,
+    loading,
   } = useCompanyData(phaseArg, monthArg);
 
   if (loading) {
@@ -85,13 +86,36 @@ export default function Home() {
     ? ''
     : dashMonths.length === 1
       ? ` (${dashMonths[0]})`
-      : ` (${dashMonths[0]}~${dashMonths[dashMonths.length - 1]}, ${dashMonths.length}개월)`;
+      : ` (${dashMonths.length}개월 선택)`;
 
   const toggleMonth = (m: string) => {
     setDashMonths(prev =>
       prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m].sort()
     );
   };
+
+  // 여러 월 선택 시 월별 집계 데이터 계산
+  const monthlyAggregation = dashMonths.length >= 2
+    ? dashMonths.map(month => {
+        const monthActs = activities.filter(a => a.month === month);
+        const engSaving = monthActs.filter(a => a.activity_type === 'engineering')
+          .reduce((s, a) => s + getActivitySaving(a, referenceData, unitPrices), 0);
+        const ppeSaving = monthActs.filter(a => a.activity_type === 'ppe')
+          .reduce((s, a) => s + getActivitySaving(a, referenceData, unitPrices), 0);
+        const eduSaving = monthActs.filter(a => a.activity_type === 'education')
+          .reduce((s, a) => s + getActivitySaving(a, referenceData, unitPrices), 0);
+        const actCount = monthActs.reduce((s, a) => s + a.activity_count, 0);
+        return {
+          month,
+          monthLabel: `${parseInt(month.split('-')[1], 10)}월`,
+          engineering: engSaving,
+          ppe: ppeSaving,
+          education: eduSaving,
+          total: engSaving + ppeSaving + eduSaving,
+          activityCount: actCount,
+        };
+      })
+    : null;
 
   return (
     <div className="page dashboard-page dashboard-fit">
@@ -121,10 +145,7 @@ export default function Home() {
             <button
               key={opt.value}
               className={`dash-phase-btn${dashPhase === opt.value ? ' active' : ''}`}
-              onClick={() => {
-                setDashPhase(opt.value);
-                setDashMonths([]);
-              }}
+              onClick={() => setDashPhase(opt.value)}
             >
               {opt.label}
             </button>
@@ -194,6 +215,49 @@ export default function Home() {
             settings={settings}
             companyCount={companiesWithSavings.length}
           />
+
+          {/* 여러 월 선택 시 월별 집계표 */}
+          {monthlyAggregation && (
+            <div className="chart-card monthly-agg-card">
+              <h3 className="chart-title">월별 집계표</h3>
+              <div className="monthly-agg-wrap">
+                <table className="data-table monthly-agg-table">
+                  <thead>
+                    <tr>
+                      <th>월</th>
+                      <th className="text-right">공학적 개선</th>
+                      <th className="text-right">보호구</th>
+                      <th className="text-right">교육/행동교정</th>
+                      <th className="text-right">합계</th>
+                      <th className="text-right">활동건수</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {monthlyAggregation.map(row => (
+                      <tr key={row.month}>
+                        <td className="font-bold">{row.monthLabel}</td>
+                        <td className="text-right">{formatBillion(row.engineering)}</td>
+                        <td className="text-right">{formatBillion(row.ppe)}</td>
+                        <td className="text-right">{formatBillion(row.education)}</td>
+                        <td className="text-right font-bold">{formatBillion(row.total)}</td>
+                        <td className="text-right">{row.activityCount.toLocaleString()}건</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="monthly-agg-total">
+                      <td className="font-bold">합계</td>
+                      <td className="text-right font-bold">{formatBillion(monthlyAggregation.reduce((s, r) => s + r.engineering, 0))}</td>
+                      <td className="text-right font-bold">{formatBillion(monthlyAggregation.reduce((s, r) => s + r.ppe, 0))}</td>
+                      <td className="text-right font-bold">{formatBillion(monthlyAggregation.reduce((s, r) => s + r.education, 0))}</td>
+                      <td className="text-right font-bold">{formatBillion(monthlyAggregation.reduce((s, r) => s + r.total, 0))}</td>
+                      <td className="text-right font-bold">{monthlyAggregation.reduce((s, r) => s + r.activityCount, 0).toLocaleString()}건</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          )}
 
           <div className="dashboard-bottom">
             <div className="chart-card">

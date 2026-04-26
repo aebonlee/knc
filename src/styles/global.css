@@ -510,6 +510,44 @@ a { color: inherit; text-decoration: none; }
   flex-shrink: 0;
 }
 
+/* 월별 집계표 */
+.monthly-agg-card {
+  margin-bottom: 16px;
+  flex-shrink: 0;
+}
+.monthly-agg-card .chart-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0 0 12px;
+  color: var(--text);
+}
+.monthly-agg-wrap {
+  overflow-x: auto;
+}
+.monthly-agg-table {
+  width: 100%;
+  font-size: 0.82rem;
+}
+.monthly-agg-table th {
+  font-size: 0.75rem;
+  text-transform: none;
+  background: var(--border-light);
+}
+.monthly-agg-table td,
+.monthly-agg-table th {
+  padding: 8px 12px;
+  white-space: nowrap;
+}
+.monthly-agg-total {
+  background: var(--primary-bg);
+  font-weight: 700;
+}
+.monthly-agg-total td {
+  border-top: 2px solid var(--primary);
+}
+.text-right { text-align: right; }
+.font-bold { font-weight: 700; }
+
 .page-header-row {
   display: flex;
   justify-content: space-between;
