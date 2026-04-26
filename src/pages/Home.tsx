@@ -132,7 +132,30 @@ export default function Home() {
         </div>
 
         <div className="dash-month-row">
-          {PHASE_MONTHS[dashPhase].map(mon => {
+          <span className="dash-month-label">1차</span>
+          {PHASE_MONTHS[1].map(mon => {
+            const year = new Date().getFullYear();
+            const key = `${year}-${String(mon).padStart(2, '0')}`;
+            const hasData = allMonths.includes(key);
+            return (
+              <label
+                key={key}
+                className={`dash-month-check${!hasData ? ' disabled' : ''}`}
+                title={!hasData ? '데이터 없음' : ''}
+              >
+                <input
+                  type="checkbox"
+                  checked={dashMonths.includes(key)}
+                  onChange={() => toggleMonth(key)}
+                  disabled={!hasData}
+                />
+                {mon}월
+              </label>
+            );
+          })}
+          <span className="dash-month-divider" />
+          <span className="dash-month-label">2차</span>
+          {PHASE_MONTHS[2].map(mon => {
             const year = new Date().getFullYear();
             const key = `${year}-${String(mon).padStart(2, '0')}`;
             const hasData = allMonths.includes(key);
