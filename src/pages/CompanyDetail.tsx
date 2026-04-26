@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
-import { FiArrowLeft, FiEdit2, FiPlus, FiTrash2, FiSave } from 'react-icons/fi';
+import { FiArrowLeft, FiEdit2, FiPlus, FiTrash2 } from 'react-icons/fi';
 import { supabase, TABLES } from '../utils/supabase';
 import { DEFAULT_REFERENCE_DATA } from '../data/referenceData';
 import { getWeight } from '../hooks/useCompanyData';
@@ -350,19 +350,12 @@ export default function CompanyDetail() {
             onUnitPriceChanged={fetchData}
           />
 
-          {/* 저장 바 */}
-          <div className="save-bar">
-            <button
-              className="btn-primary"
-              onClick={() => saveSnapshot()}
-              disabled={savingSnapshot}
-            >
-              <FiSave size={16} /> {savingSnapshot ? '저장 중...' : `${selectedMonth} 스냅샷 저장`}
-            </button>
-          </div>
-
           <SnapshotPanel
             snapshots={monthSnapshots}
+            month={selectedMonth}
+            referenceData={referenceData}
+            saving={savingSnapshot}
+            onSave={saveSnapshot}
             onRestore={restoreSnapshot}
             onDelete={deleteSnapshot}
           />
