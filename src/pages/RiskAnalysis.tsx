@@ -1,24 +1,53 @@
-import { useCompanyData, formatWon, formatBillion } from '../hooks/useCompanyData';
+import { useState, useMemo } from 'react';
+import { useCompanyData, formatWon, formatBillion, getActivitySaving } from '../hooks/useCompanyData';
 import RiskBarChart from '../components/dashboard/RiskBarChart';
 import { ACTIVITY_TYPE_LABELS } from '../data/referenceData';
+import type { RiskSummary } from '../types';
 
 export default function RiskAnalysis() {
-  const { riskSummary, referenceData, companiesWithSavings, activities, loading } = useCompanyData();
+  const { referenceData, companiesWithSavings, activities, unitPrices, loading } = useCompanyData();
+  const [selectedMonth, setSelectedMonth] = useState<string>('');
+
+  const availableMonths = useMemo(() => {
+    return [...new Set(activities.map(a => a.month))].filter(Boolean).sort();
+  }, [activities]);
+
+  const filteredActivities = useMemo(() => {
+    if (!selectedMonth) return activities;
+    return activities.filter(a => a.month === selectedMonth);
+  }, [activities, selectedMonth]);
+
+  // 월 필터 적용 riskSummary 재계산
+  const riskSummary: RiskSummary[] = useMemo(() => {
+    return referenceData.map(ref => {
+      const riskActs = filteredActivities.filter(a => a.risk_no === ref.no);
+      const engineering_total = riskActs
+        .filter(a => a.activity_type === 'engineering')
+        .reduce((s, a) => s + getActivitySaving(a, referenceData, unitPrices), 0);
+      const ppe_total = riskActs
+        .filter(a => a.activity_type === 'ppe')
+        .reduce((s, a) => s + getActivitySaving(a, referenceData, unitPrices), 0);
+      const education_total = riskActs
+        .filter(a => a.activity_type === 'education')
+        .reduce((s, a) => s + getActivitySaving(a, referenceData, unitPrices), 0);
+      return {
+        risk_no: ref.no, risk_name: ref.risk_name,
+        engineering_total, ppe_total, education_total,
+        total_saving: engineering_total + ppe_total + education_total,
+      };
+    });
+  }, [filteredActivities, referenceData, unitPrices]);
 
   if (loading) {
     return <div className="page-loading"><div className="spinner" /></div>;
   }
 
-  // 기업×위험요인 히트맵 데이터
+  // 기업×위험요인 히트맵 데이터 (월 필터 반영)
   const heatmapData = companiesWithSavings.slice(0, 20).map(comp => {
-    const compActivities = activities.filter(a => a.company_id === comp.id);
+    const compActivities = filteredActivities.filter(a => a.company_id === comp.id);
     const riskValues = referenceData.map(ref => {
       const refActs = compActivities.filter(a => a.risk_no === ref.no);
-      return refActs.reduce((sum, a) => {
-        const w = a.activity_type === 'engineering' ? ref.weight_engineering
-                : a.activity_type === 'ppe' ? ref.weight_ppe : ref.weight_education;
-        return sum + ref.social_cost * w * a.activity_count;
-      }, 0);
+      return refActs.reduce((sum, a) => sum + getActivitySaving(a, referenceData, unitPrices), 0);
     });
     return { name: comp.company_name, values: riskValues };
   });
@@ -30,6 +59,21 @@ export default function RiskAnalysis() {
       <div className="page-header">
         <h1>위험요인별 분석</h1>
         <p>13개 위험요인에 대한 전체 기업 현황</p>
+      </div>
+
+      <div className="analytics-filter-bar" style={{ marginBottom: 16 }}>
+        <div className="analytics-month-filter">
+          <select
+            className="month-filter-select"
+            value={selectedMonth}
+            onChange={e => setSelectedMonth(e.target.value)}
+          >
+            <option value="">전체 월</option>
+            {availableMonths.map(m => (
+              <option key={m} value={m}>{m}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <RiskBarChart riskSummary={riskSummary} />

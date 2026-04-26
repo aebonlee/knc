@@ -5,9 +5,9 @@ import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
 } from 'recharts';
 import { Link } from 'react-router-dom';
-import { useCompanyData, formatBillion, getWeight } from '../hooks/useCompanyData';
+import { useCompanyData, formatBillion, getActivitySaving } from '../hooks/useCompanyData';
 import { ACTIVITY_TYPE_LABELS } from '../data/referenceData';
-import type { SolutionType } from '../types';
+import type { SolutionType, CompanyWithSavings } from '../types';
 
 const COLORS = ['#2563EB', '#059669', '#F59E0B'];
 const RADAR_COLORS = ['#2563EB', '#059669', '#F59E0B', '#7C3AED', '#DC2626'];
@@ -25,22 +25,44 @@ const formatTooltip = (value: number) =>
 
 export default function Analytics() {
   const {
-    companiesWithSavings, activities, referenceData, loading,
+    companiesWithSavings, activities, referenceData, unitPrices, loading,
   } = useCompanyData();
 
   const [mode, setMode] = useState<AnalyticsMode>('company');
   const [selectedCompanyIds, setSelectedCompanyIds] = useState<string[]>([]);
   const [selectedTypes, setSelectedTypes] = useState<SolutionType[]>(['공학', '보호구', '행동교정']);
+  const [selectedMonth, setSelectedMonth] = useState<string>('');
   const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  // 월 목록 추출
+  const availableMonths = useMemo(() => {
+    const months = [...new Set(activities.map(a => a.month))].filter(Boolean).sort();
+    return months;
+  }, [activities]);
+
+  // 월별 필터된 활동
+  const filteredActivities = useMemo(() => {
+    if (!selectedMonth) return activities;
+    return activities.filter(a => a.month === selectedMonth);
+  }, [activities, selectedMonth]);
+
+  // 월 필터 적용된 기업별 절감액 재계산
+  const monthFilteredCompanies: CompanyWithSavings[] = useMemo(() => {
+    return companiesWithSavings.map(comp => {
+      const compActs = filteredActivities.filter(a => a.company_id === comp.id);
+      const total = compActs.reduce((sum, act) => sum + getActivitySaving(act, referenceData, unitPrices), 0);
+      return { ...comp, total_saving: total };
+    });
+  }, [companiesWithSavings, filteredActivities, referenceData, unitPrices]);
 
   // Filtered companies based on mode
   const filteredCompanies = useMemo(() => {
     if (mode === 'company') {
-      if (selectedCompanyIds.length === 0) return companiesWithSavings;
-      return companiesWithSavings.filter(c => selectedCompanyIds.includes(c.id));
+      if (selectedCompanyIds.length === 0) return monthFilteredCompanies;
+      return monthFilteredCompanies.filter(c => selectedCompanyIds.includes(c.id));
     }
-    return companiesWithSavings.filter(c => selectedTypes.includes(c.solution_type));
-  }, [mode, selectedCompanyIds, selectedTypes, companiesWithSavings]);
+    return monthFilteredCompanies.filter(c => selectedTypes.includes(c.solution_type));
+  }, [mode, selectedCompanyIds, selectedTypes, monthFilteredCompanies]);
 
   const toggleCompany = (id: string) => {
     setSelectedCompanyIds(prev => {
@@ -61,12 +83,10 @@ export default function Analytics() {
   const barData = useMemo(() => {
     if (mode === 'company') {
       return filteredCompanies.map(comp => {
-        const compActs = activities.filter(a => a.company_id === comp.id);
+        const compActs = filteredActivities.filter(a => a.company_id === comp.id);
         let eng = 0, ppe = 0, edu = 0;
         compActs.forEach(act => {
-          const ref = referenceData.find(r => r.no === act.risk_no);
-          if (!ref) return;
-          const saving = ref.social_cost * getWeight(ref, act.activity_type) * act.activity_count;
+          const saving = getActivitySaving(act, referenceData, unitPrices);
           if (act.activity_type === 'engineering') eng += saving;
           else if (act.activity_type === 'ppe') ppe += saving;
           else edu += saving;
@@ -83,17 +103,15 @@ export default function Analytics() {
       typeMap[comp.solution_type] = (typeMap[comp.solution_type] || 0) + comp.total_saving;
     });
     return Object.entries(typeMap).map(([name, value]) => ({ name, 절감액: value }));
-  }, [mode, filteredCompanies, activities, referenceData]);
+  }, [mode, filteredCompanies, filteredActivities, referenceData, unitPrices]);
 
   // --- Chart 2: Donut Pie Data ---
   const pieData = useMemo(() => {
     const companyIds = new Set(filteredCompanies.map(c => c.id));
-    const filtered = activities.filter(a => companyIds.has(a.company_id));
+    const filtered = filteredActivities.filter(a => companyIds.has(a.company_id));
     let eng = 0, ppe = 0, edu = 0;
     filtered.forEach(act => {
-      const ref = referenceData.find(r => r.no === act.risk_no);
-      if (!ref) return;
-      const saving = ref.social_cost * getWeight(ref, act.activity_type) * act.activity_count;
+      const saving = getActivitySaving(act, referenceData, unitPrices);
       if (act.activity_type === 'engineering') eng += saving;
       else if (act.activity_type === 'ppe') ppe += saving;
       else edu += saving;
@@ -103,25 +121,24 @@ export default function Analytics() {
       { name: ACTIVITY_TYPE_LABELS.ppe, value: ppe },
       { name: ACTIVITY_TYPE_LABELS.education, value: edu },
     ].filter(d => d.value > 0);
-  }, [filteredCompanies, activities, referenceData]);
+  }, [filteredCompanies, filteredActivities, referenceData, unitPrices]);
 
   // --- Chart 3: Radar Chart Data ---
   const radarData = useMemo(() => {
     if (mode === 'company' && selectedCompanyIds.length > 0) {
-      const selectedComps = companiesWithSavings.filter(c => selectedCompanyIds.includes(c.id));
+      const selectedComps = monthFilteredCompanies.filter(c => selectedCompanyIds.includes(c.id));
       return referenceData.map(ref => {
         const row: Record<string, string | number> = { risk: ref.risk_name };
         selectedComps.forEach(comp => {
-          const compActs = activities.filter(a => a.company_id === comp.id && a.risk_no === ref.no);
-          row[comp.company_name] = compActs.reduce((s, act) =>
-            s + ref.social_cost * getWeight(ref, act.activity_type) * act.activity_count, 0);
+          const compActs = filteredActivities.filter(a => a.company_id === comp.id && a.risk_no === ref.no);
+          row[comp.company_name] = compActs.reduce((s, act) => s + getActivitySaving(act, referenceData, unitPrices), 0);
         });
         return row;
       });
     }
     // Type mode or no company selected: average by solution type
     const typeGroups: Record<string, string[]> = {};
-    const compsToUse = mode === 'type' ? filteredCompanies : companiesWithSavings;
+    const compsToUse = mode === 'type' ? filteredCompanies : monthFilteredCompanies;
     compsToUse.forEach(comp => {
       if (!typeGroups[comp.solution_type]) typeGroups[comp.solution_type] = [];
       typeGroups[comp.solution_type].push(comp.id);
@@ -131,15 +148,14 @@ export default function Analytics() {
       const row: Record<string, string | number> = { risk: ref.risk_name };
       Object.entries(typeGroups).forEach(([type, ids]) => {
         const total = ids.reduce((sum, compId) => {
-          const compActs = activities.filter(a => a.company_id === compId && a.risk_no === ref.no);
-          return sum + compActs.reduce((s, act) =>
-            s + ref.social_cost * getWeight(ref, act.activity_type) * act.activity_count, 0);
+          const compActs = filteredActivities.filter(a => a.company_id === compId && a.risk_no === ref.no);
+          return sum + compActs.reduce((s, act) => s + getActivitySaving(act, referenceData, unitPrices), 0);
         }, 0);
         row[type] = ids.length > 0 ? total / ids.length : 0;
       });
       return row;
     });
-  }, [mode, selectedCompanyIds, filteredCompanies, companiesWithSavings, activities, referenceData]);
+  }, [mode, selectedCompanyIds, filteredCompanies, monthFilteredCompanies, filteredActivities, referenceData, unitPrices]);
 
   const radarKeys = useMemo(() => {
     if (radarData.length === 0) return [];
@@ -177,6 +193,19 @@ export default function Analytics() {
           >
             유형별
           </button>
+        </div>
+
+        <div className="analytics-month-filter">
+          <select
+            className="month-filter-select"
+            value={selectedMonth}
+            onChange={e => setSelectedMonth(e.target.value)}
+          >
+            <option value="">전체 월</option>
+            {availableMonths.map(m => (
+              <option key={m} value={m}>{m}</option>
+            ))}
+          </select>
         </div>
 
         {mode === 'company' ? (

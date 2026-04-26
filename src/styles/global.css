@@ -1720,6 +1720,24 @@ html[data-theme="dark"] .google-btn:hover:not(:disabled) { background: #3C3C3C; 
   flex-shrink: 0;
 }
 
+.analytics-month-filter { flex-shrink: 0; }
+.month-filter-select {
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: var(--transition);
+  min-width: 140px;
+}
+.month-filter-select:focus {
+  border-color: var(--primary);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+}
+
 .analytics-company-select {
   display: flex;
   flex-direction: column;
