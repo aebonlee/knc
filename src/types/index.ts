@@ -117,6 +117,17 @@ export interface RiskSummary {
   total_saving: number;
 }
 
+// 위험성평가
+export interface RiskAssessment {
+  id: string;
+  company_id: string;
+  month: string;
+  risk_no: number;
+  frequency: number;
+  severity: number;
+  created_at: string;
+}
+
 // 제출/승인 워크플로우
 export type SubmissionStatus = 'submitted' | 'approved' | 'revision' | 'rejected';
 

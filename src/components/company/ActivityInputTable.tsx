@@ -50,13 +50,14 @@ interface Props {
   month: string;
   unitPrices: CompanyUnitPrice[];
   solutionType?: string;
+  targetRiskNos?: number[];
   onChanged: () => void;
   onUnitPriceChanged: () => void;
 }
 
 export default function ActivityInputTable({
   companyId, referenceData, demandCompanies, activities,
-  month, unitPrices, solutionType, onChanged, onUnitPriceChanged,
+  month, unitPrices, solutionType, targetRiskNos, onChanged, onUnitPriceChanged,
 }: Props) {
   const [saving, setSaving] = useState<string | null>(null);
 
@@ -144,6 +145,11 @@ export default function ActivityInputTable({
   const typeCount = activityTypes.length;
   const hasDemands = monthDemands.length > 0;
 
+  // targetRiskNos가 전달되면 해당 위험요인만 표시
+  const filteredRefData = targetRiskNos
+    ? referenceData.filter(r => targetRiskNos.includes(r.no))
+    : referenceData;
+
   const getRiskSubtotal = (riskNo: number, type: ActivityType) => {
     const price = getUnitPrice(riskNo, type);
     return monthDemands.reduce((sum, dc) => {
@@ -153,15 +159,29 @@ export default function ActivityInputTable({
   };
 
   let grandTotal = 0;
-  referenceData.forEach(ref => {
+  filteredRefData.forEach(ref => {
     activityTypes.forEach(type => {
       grandTotal += getRiskSubtotal(ref.no, type);
     });
   });
 
+  if (targetRiskNos && targetRiskNos.length === 0) {
+    return (
+      <div className="activity-table-wrap">
+        <h4>활동 횟수 입력 <span className="text-muted" style={{ fontWeight: 400, fontSize: '0.8rem' }}>({month})</span></h4>
+        <div className="empty-state" style={{ padding: '32px 20px' }}>
+          <p>위험성평가에서 8점 이상인 항목이 없습니다.</p>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>위험성평가 테이블에서 빈도와 강도를 입력해주세요.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="activity-table-wrap">
-      <h4>활동 횟수 입력 <span className="text-muted" style={{ fontWeight: 400, fontSize: '0.8rem' }}>({month})</span></h4>
+      <h4>활동 횟수 입력 <span className="text-muted" style={{ fontWeight: 400, fontSize: '0.8rem' }}>({month})</span>
+        {targetRiskNos && <span className="text-muted" style={{ fontWeight: 400, fontSize: '0.75rem', marginLeft: 6 }}>— 위험도 8점 이상 {targetRiskNos.length}개 항목</span>}
+      </h4>
       <div className="activity-table-scroll">
         <table className="activity-table">
           <thead>
@@ -191,7 +211,7 @@ export default function ActivityInputTable({
             </tr>
           </thead>
           <tbody>
-            {referenceData.map(ref =>
+            {filteredRefData.map(ref =>
               activityTypes.map((type, typeIdx) => {
                 const unitPrice = getUnitPrice(ref.no, type);
                 const rowSubtotal = getRiskSubtotal(ref.no, type);

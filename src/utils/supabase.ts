@@ -28,4 +28,5 @@ export const TABLES = {
   submissions: `${site.dbPrefix}submissions`,
   submission_comments: `${site.dbPrefix}submission_comments`,
   notifications: `${site.dbPrefix}notifications`,
+  risk_assessments: `${site.dbPrefix}risk_assessments`,
 } as const;

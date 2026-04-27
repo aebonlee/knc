@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { FiArrowLeft, FiEdit2, FiPlus, FiTrash2 } from 'react-icons/fi';
 import { supabase, TABLES } from '../utils/supabase';
@@ -10,10 +10,11 @@ import CompanySummary from '../components/company/CompanySummary';
 import CompanyForm from '../components/company/CompanyForm';
 import DemandCompanyManager from '../components/company/DemandCompanyManager';
 import ActivityInputTable from '../components/company/ActivityInputTable';
+import RiskAssessmentTable from '../components/company/RiskAssessmentTable';
 import SnapshotPanel from '../components/company/SnapshotPanel';
 import type {
   Company, DemandCompany, Activity, ReferenceData,
-  CompanyMonth, CompanyUnitPrice, ActivitySnapshot, Submission,
+  CompanyMonth, CompanyUnitPrice, ActivitySnapshot, Submission, RiskAssessment,
 } from '../types';
 
 export default function CompanyDetail() {
@@ -39,13 +40,13 @@ export default function CompanyDetail() {
   const [savingSnapshot, setSavingSnapshot] = useState(false);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [submitting, setSubmitting] = useState(false);
-  const [updatingEvidence, setUpdatingEvidence] = useState(false);
+  const [riskAssessments, setRiskAssessments] = useState<RiskAssessment[]>([]);
 
   const fetchData = useCallback(async () => {
     if (!supabase || !id) return;
     setLoading(true);
     try {
-      const [compRes, demandRes, actRes, refRes, monthRes, priceRes, snapRes, subRes] = await Promise.all([
+      const [compRes, demandRes, actRes, refRes, monthRes, priceRes, snapRes, subRes, riskRes] = await Promise.all([
         supabase.from(TABLES.companies).select('*').eq('id', id).single(),
         supabase.from(TABLES.demand_companies).select('*').eq('company_id', id).order('demand_no'),
         supabase.from(TABLES.activities).select('*').eq('company_id', id),
@@ -54,6 +55,7 @@ export default function CompanyDetail() {
         supabase.from(TABLES.company_unit_prices).select('*').eq('company_id', id),
         supabase.from(TABLES.activity_snapshots).select('*').eq('company_id', id).order('created_at', { ascending: false }).limit(20),
         supabase.from(TABLES.submissions).select('*').eq('company_id', id).order('submitted_at', { ascending: false }),
+        supabase.from(TABLES.risk_assessments).select('*').eq('company_id', id),
       ]);
       if (compRes.data) setCompany(compRes.data);
       if (demandRes.data) setDemandCompanies(demandRes.data);
@@ -68,6 +70,7 @@ export default function CompanyDetail() {
       if (priceRes.data) setUnitPrices(priceRes.data);
       if (snapRes.data) setSnapshots(snapRes.data);
       if (subRes.data) setSubmissions(subRes.data);
+      if (riskRes.data) setRiskAssessments(riskRes.data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -76,6 +79,18 @@ export default function CompanyDetail() {
   }, [id]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  // 현재 월의 위험성평가에서 8점 이상인 risk_no 배열
+  const monthAssessments = useMemo(
+    () => riskAssessments.filter(a => a.month === selectedMonth),
+    [riskAssessments, selectedMonth],
+  );
+  const targetRiskNos = useMemo(
+    () => monthAssessments
+      .filter(a => a.frequency * a.severity >= 8)
+      .map(a => a.risk_no),
+    [monthAssessments],
+  );
 
   const addMonth = async () => {
     if (!supabase || !id || !newMonth) return;
@@ -160,7 +175,7 @@ export default function CompanyDetail() {
   };
 
   // 관리자에게 제출
-  const submitForReview = async (evidenceLinks: { url: string; label: string }[]) => {
+  const submitForReview = async (memo: string) => {
     if (!supabase || !id || !selectedMonth || !user) return;
     setSubmitting(true);
     try {
@@ -181,14 +196,23 @@ export default function CompanyDetail() {
       }).select().single();
 
       // 제출 레코드 생성
-      await supabase.from(TABLES.submissions).insert({
+      const { data: subData } = await supabase.from(TABLES.submissions).insert({
         company_id: id,
         month: selectedMonth,
         snapshot_id: snapData?.id || null,
         submitted_by: user.id,
         status: 'submitted',
-        evidence_links: evidenceLinks.length > 0 ? evidenceLinks : [],
-      });
+      }).select().single();
+
+      // 결재 메모를 submission_comments에 삽입
+      if (memo && subData?.id) {
+        await supabase.from(TABLES.submission_comments).insert({
+          submission_id: subData.id,
+          user_id: user.id,
+          user_name: user.user_metadata?.name || user.email || '',
+          comment: memo,
+        });
+      }
 
       // 관리자/담당자에게 인앱 알림 + 이메일 + SMS
       if (supabase) {
@@ -198,24 +222,22 @@ export default function CompanyDetail() {
           .in('role', ['superadmin', 'manager']);
         if (admins && admins.length > 0) {
           const adminIds = admins.map((a: { user_id: string }) => a.user_id);
-          const evidenceNote = evidenceLinks.length > 0 ? ` (증빙자료 ${evidenceLinks.length}건 첨부)` : '';
           notifyMultiple(adminIds, {
             type: 'submission',
             title: '새로운 실적 제출',
-            message: `${company?.company_name} — ${selectedMonth} 데이터가 제출되었습니다.${evidenceNote}`,
+            message: `${company?.company_name} — ${selectedMonth} 데이터가 제출되었습니다.`,
             link: '/admin/submissions',
           });
         }
         // 이메일 + SMS
-        const evidenceHtml = evidenceLinks.length > 0
-          ? `<p style="margin-top:12px;"><strong>증빙자료 링크 (${evidenceLinks.length}건):</strong></p>
-             <ul style="margin:8px 0;">${evidenceLinks.map(l => `<li><a href="${l.url}">${l.label}</a></li>`).join('')}</ul>`
+        const memoHtml = memo
+          ? `<p style="margin-top:12px;padding:10px 14px;background:#F8FAFC;border-left:3px solid #0F2B5B;border-radius:4px;"><strong>결재 메모:</strong><br/>${memo}</p>`
           : '';
         notifyAdminsEmailSMS({
           subject: `[산업안전 RBF] 새로운 실적 제출 — ${company?.company_name}`,
           htmlBody: `
             <p><strong>${company?.company_name}</strong>에서 <strong>${selectedMonth}</strong> 실적 데이터를 제출했습니다.</p>
-            ${evidenceHtml}
+            ${memoHtml}
             <p>제출 관리 페이지에서 검토해 주세요.</p>
             <p style="margin-top:20px;">
               <a href="https://knc.dreamitbiz.com/admin/submissions"
@@ -223,7 +245,7 @@ export default function CompanyDetail() {
                 제출 관리 바로가기
               </a>
             </p>`,
-          smsMessage: `[산업안전RBF] ${company?.company_name} ${selectedMonth} 실적이 제출되었습니다.${evidenceLinks.length > 0 ? ` (증빙 ${evidenceLinks.length}건)` : ''} 검토 부탁드립니다.`,
+          smsMessage: `[산업안전RBF] ${company?.company_name} ${selectedMonth} 실적이 제출되었습니다. 검토 부탁드립니다.`,
         });
       }
 
@@ -252,26 +274,6 @@ export default function CompanyDetail() {
       alert('제출 취소 중 오류가 발생했습니다.');
     } finally {
       setSubmitting(false);
-    }
-  };
-
-  // 기존 제출의 증빙자료 업데이트
-  const updateEvidence = async (evidenceLinks: { url: string; label: string }[]) => {
-    if (!supabase || !selectedMonth) return;
-    const sub = submissions.find(s => s.month === selectedMonth);
-    if (!sub) return;
-    setUpdatingEvidence(true);
-    try {
-      await supabase.from(TABLES.submissions).update({
-        evidence_links: evidenceLinks,
-      }).eq('id', sub.id);
-      alert('증빙자료가 업데이트되었습니다.');
-      fetchData();
-    } catch (err) {
-      console.error(err);
-      alert('증빙자료 업데이트 중 오류가 발생했습니다.');
-    } finally {
-      setUpdatingEvidence(false);
     }
   };
 
@@ -457,6 +459,14 @@ export default function CompanyDetail() {
       {/* 선택된 월의 컨텐츠 */}
       {selectedMonth ? (
         <div className="month-content">
+          <RiskAssessmentTable
+            companyId={company.id}
+            month={selectedMonth}
+            referenceData={referenceData}
+            assessments={monthAssessments}
+            onChanged={fetchData}
+          />
+
           <DemandCompanyManager
             companyId={company.id}
             demandCompanies={demandCompanies}
@@ -472,6 +482,7 @@ export default function CompanyDetail() {
             month={selectedMonth}
             unitPrices={unitPrices}
             solutionType={company.solution_type}
+            targetRiskNos={targetRiskNos}
             onChanged={fetchData}
             onUnitPriceChanged={fetchData}
           />
@@ -489,8 +500,6 @@ export default function CompanyDetail() {
             onSubmit={submitForReview}
             cancelling={submitting}
             onCancel={cancelSubmission}
-            updatingEvidence={updatingEvidence}
-            onUpdateEvidence={updateEvidence}
           />
         </div>
       ) : (

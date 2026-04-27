@@ -4400,3 +4400,211 @@ html[data-theme="dark"] .submission-evidence-link {
   .impersonate-bar { font-size: 0.78rem; gap: 4px; padding: 6px 10px; }
   .impersonate-select { max-width: 120px; font-size: 0.72rem; }
 }
+
+/* =====================================================
+   Risk Assessment Table — 위험성평가
+   ===================================================== */
+.risk-assessment-wrap {
+  margin-top: 24px;
+  margin-bottom: 8px;
+}
+.risk-assessment-wrap h4 {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+/* 안내 헤더 */
+.risk-assessment-guide {
+  background: var(--primary-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 18px;
+  margin-bottom: 12px;
+}
+.risk-guide-formula {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+.risk-guide-target {
+  display: inline-block;
+  margin-left: 14px;
+  padding: 2px 10px;
+  background: #FEF2F2;
+  color: #DC2626;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+html[data-theme="dark"] .risk-guide-target {
+  background: rgba(220,38,38,0.12);
+}
+.risk-guide-scales {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.risk-guide-scale {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+.risk-guide-label {
+  font-weight: 700;
+  color: var(--primary);
+  min-width: 28px;
+}
+
+/* 테이블 */
+.risk-assessment-table-scroll {
+  overflow-x: auto;
+}
+.risk-assessment-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 520px;
+}
+.risk-assessment-table th,
+.risk-assessment-table td {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  text-align: center;
+  font-size: 0.85rem;
+}
+.risk-assessment-table th {
+  background: var(--primary);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+.risk-assessment-table tbody tr:hover {
+  background: var(--bg);
+}
+.risk-assessment-table .cell-no {
+  font-weight: 600;
+  color: var(--text-secondary);
+  width: 44px;
+}
+.risk-assessment-table .cell-risk {
+  text-align: left;
+  font-weight: 500;
+}
+
+/* select */
+.risk-select {
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  font-size: 0.85rem;
+  background: var(--bg-card);
+  color: var(--text);
+  cursor: pointer;
+  width: 60px;
+  text-align: center;
+  transition: var(--transition);
+}
+.risk-select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+}
+
+/* 위험도 점수 */
+.risk-score {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+.risk-score-high {
+  color: #DC2626;
+  font-size: 1rem;
+}
+
+/* 대상 체크 */
+.risk-target-cell {
+  width: 60px;
+}
+.risk-target-icon {
+  color: #059669;
+}
+
+/* 8점 이상 행 하이라이트 */
+.risk-row-target {
+  background: #FEF2F2 !important;
+}
+html[data-theme="dark"] .risk-row-target {
+  background: rgba(220,38,38,0.06) !important;
+}
+.risk-row-target:hover {
+  background: #FEE2E2 !important;
+}
+html[data-theme="dark"] .risk-row-target:hover {
+  background: rgba(220,38,38,0.1) !important;
+}
+
+/* 요약 */
+.risk-assessment-summary {
+  margin-top: 8px;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  text-align: right;
+}
+.risk-assessment-summary strong {
+  color: #DC2626;
+  font-size: 1rem;
+}
+
+/* =====================================================
+   Snapshot: Approval Memo (결재 메모)
+   ===================================================== */
+.snap-approval-section {
+  margin-top: 12px;
+  padding: 16px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.snap-approval-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+}
+.snap-approval-memo {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  font-size: 0.85rem;
+  background: var(--bg-card);
+  color: var(--text);
+  resize: vertical;
+  min-height: 60px;
+  transition: var(--transition);
+  font-family: inherit;
+}
+.snap-approval-memo:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+}
+.snap-approval-section .snap-submit-btn {
+  margin-top: 12px;
+  width: 100%;
+  justify-content: center;
+}
+
+@media (max-width: 640px) {
+  .risk-guide-scales { flex-direction: column; gap: 8px; }
+  .risk-guide-formula { font-size: 0.85rem; }
+  .risk-guide-target { display: block; margin-left: 0; margin-top: 6px; text-align: center; }
+}

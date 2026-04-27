@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { FiSave, FiRotateCcw, FiTrash2, FiClock, FiSend, FiCheck, FiAlertCircle, FiXCircle, FiPlus, FiX, FiLink, FiUpload } from 'react-icons/fi';
+import { useState } from 'react';
+import { FiRotateCcw, FiTrash2, FiClock, FiSend, FiCheck, FiAlertCircle, FiXCircle, FiFileText } from 'react-icons/fi';
 import { formatWon } from '../../hooks/useCompanyData';
 import type { ActivitySnapshot, ReferenceData, Submission } from '../../types';
 import { getWeight } from '../../hooks/useCompanyData';
@@ -10,11 +10,6 @@ const STATUS_INFO: Record<Submission['status'], { label: string; icon: typeof Fi
   revision: { label: '보완요청', icon: FiAlertCircle, color: '#2563EB', bg: '#EFF6FF' },
   rejected: { label: '반려', icon: FiXCircle, color: '#DC2626', bg: '#FEF2F2' },
 };
-
-interface EvidenceLink {
-  url: string;
-  label: string;
-}
 
 interface Props {
   snapshots: ActivitySnapshot[];
@@ -27,11 +22,9 @@ interface Props {
   // 제출 관련
   submission?: Submission | null;
   submitting?: boolean;
-  onSubmit?: (evidenceLinks: EvidenceLink[]) => void;
+  onSubmit?: (memo: string) => void;
   cancelling?: boolean;
   onCancel?: () => void;
-  updatingEvidence?: boolean;
-  onUpdateEvidence?: (evidenceLinks: EvidenceLink[]) => void;
 }
 
 function getSnapshotStats(snap: ActivitySnapshot, refData: ReferenceData[]) {
@@ -57,51 +50,11 @@ function formatDateTime(iso: string) {
 export default function SnapshotPanel({
   snapshots, month, referenceData, saving, onSave, onRestore, onDelete,
   submission, submitting, onSubmit, cancelling, onCancel,
-  updatingEvidence, onUpdateEvidence,
 }: Props) {
-  const [memo, setMemo] = useState('');
-  const [evidenceLinks, setEvidenceLinks] = useState<EvidenceLink[]>([]);
-  const [linkUrl, setLinkUrl] = useState('');
-  const [linkLabel, setLinkLabel] = useState('');
-
-  // 기존 제출의 증빙자료를 로드
-  useEffect(() => {
-    if (submission?.evidence_links && Array.isArray(submission.evidence_links)) {
-      setEvidenceLinks(submission.evidence_links as EvidenceLink[]);
-    } else {
-      setEvidenceLinks([]);
-    }
-  }, [submission?.id]);
-
-  const handleSave = () => {
-    onSave(memo.trim() || '수동 저장');
-    setMemo('');
-  };
-
-  const addEvidenceLink = () => {
-    const trimmedUrl = linkUrl.trim();
-    if (!trimmedUrl) return;
-    try {
-      new URL(trimmedUrl);
-    } catch {
-      alert('올바른 URL 형식을 입력해주세요. (예: https://drive.google.com/...)');
-      return;
-    }
-    setEvidenceLinks(prev => [...prev, { url: trimmedUrl, label: linkLabel.trim() || trimmedUrl }]);
-    setLinkUrl('');
-    setLinkLabel('');
-  };
-
-  const removeEvidenceLink = (index: number) => {
-    setEvidenceLinks(prev => prev.filter((_, i) => i !== index));
-  };
+  const [approvalMemo, setApprovalMemo] = useState('');
 
   const statusInfo = submission ? STATUS_INFO[submission.status] : null;
   const canSubmit = !submission || submission.status === 'revision' || submission.status === 'rejected';
-
-  // 기존 증빙과 현재 상태 비교하여 변경 여부 확인
-  const existingLinks = (submission?.evidence_links as EvidenceLink[] | null) || [];
-  const evidenceChanged = JSON.stringify(evidenceLinks) !== JSON.stringify(existingLinks);
 
   return (
     <div className="snapshot-panel-v2">
@@ -142,111 +95,34 @@ export default function SnapshotPanel({
         </div>
       )}
 
-      {/* 저장 바 */}
-      <div className="snap-save-bar">
-        <div className="snap-save-left">
-          <FiSave size={18} className="snap-save-icon" />
-          <div className="snap-save-info">
-            <strong>{month} 데이터 저장</strong>
-            <span>현재 입력 상태를 히스토리에 기록합니다</span>
+      {/* 결재 메모 + 제출 버튼 */}
+      {onSubmit && canSubmit && (
+        <div className="snap-approval-section">
+          <div className="snap-approval-header">
+            <FiFileText size={15} />
+            <span>결재 메모</span>
           </div>
-        </div>
-        <div className="snap-save-right">
-          <input
-            type="text"
-            className="snap-memo-input"
-            placeholder="메모 (예: 1차 입력 완료)"
-            value={memo}
-            onChange={e => setMemo(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') handleSave(); }}
-            maxLength={50}
+          <textarea
+            className="snap-approval-memo"
+            placeholder="예) 강양HTS eng-01 패들릿에 증빙 3건 등록 완료"
+            value={approvalMemo}
+            onChange={e => setApprovalMemo(e.target.value)}
+            rows={3}
+            maxLength={500}
           />
-          <button className="snap-save-btn" onClick={handleSave} disabled={saving}>
-            <FiSave size={15} />
-            {saving ? '저장 중...' : '저장'}
+          <button
+            className="snap-submit-btn"
+            onClick={() => {
+              if (confirm(`${month} 데이터를 관리자에게 제출하시겠습니까?\n제출 후 관리자 검토가 진행됩니다.`)) {
+                onSubmit(approvalMemo.trim());
+                setApprovalMemo('');
+              }
+            }}
+            disabled={submitting}
+          >
+            <FiSend size={15} />
+            {submitting ? '제출 중...' : submission ? '재제출' : '관리자에게 제출'}
           </button>
-        </div>
-      </div>
-
-      {/* 증빙 링크 입력 — 항상 표시 */}
-      {onSubmit && (
-        <div className="snap-evidence-section">
-          <div className="snap-evidence-header">
-            <FiLink size={15} />
-            <span>증빙자료 링크 첨부</span>
-          </div>
-          <div className="snap-evidence-inputs">
-            <input
-              type="url"
-              className="snap-evidence-url"
-              placeholder="URL (예: https://drive.google.com/...)"
-              value={linkUrl}
-              onChange={e => setLinkUrl(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') addEvidenceLink(); }}
-            />
-            <input
-              type="text"
-              className="snap-evidence-label"
-              placeholder="파일명 (예: 4월_안전교육_수료증.pdf)"
-              value={linkLabel}
-              onChange={e => setLinkLabel(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') addEvidenceLink(); }}
-              maxLength={50}
-            />
-            <button className="snap-evidence-add" onClick={addEvidenceLink} disabled={!linkUrl.trim()}>
-              <FiPlus size={14} /> 추가
-            </button>
-          </div>
-
-          {evidenceLinks.length > 0 && (
-            <ul className="snap-evidence-list">
-              {evidenceLinks.map((link, idx) => (
-                <li key={idx} className="snap-evidence-item">
-                  <FiLink size={12} />
-                  <span className="snap-evidence-item-label">{link.label}</span>
-                  <a href={link.url} target="_blank" rel="noopener noreferrer" className="snap-evidence-item-url">
-                    {link.url.length > 50 ? link.url.slice(0, 50) + '...' : link.url}
-                  </a>
-                  <button className="snap-evidence-remove" onClick={() => removeEvidenceLink(idx)}>
-                    <FiX size={12} />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {/* 제출 or 증빙 업데이트 버튼 */}
-          <div className="snap-evidence-actions">
-            {canSubmit && (
-              <button
-                className="snap-submit-btn"
-                onClick={() => {
-                  if (confirm(`${month} 데이터를 관리자에게 제출하시겠습니까?\n제출 후 관리자 검토가 진행됩니다.`)) {
-                    onSubmit(evidenceLinks);
-                  }
-                }}
-                disabled={submitting}
-              >
-                <FiSend size={15} />
-                {submitting ? '제출 중...' : submission ? '재제출' : '관리자에게 제출'}
-                {evidenceLinks.length > 0 && ` (증빙 ${evidenceLinks.length}건)`}
-              </button>
-            )}
-            {!canSubmit && onUpdateEvidence && evidenceChanged && (
-              <button
-                className="snap-evidence-update-btn"
-                onClick={() => {
-                  if (confirm('증빙자료를 업데이트하시겠습니까?')) {
-                    onUpdateEvidence(evidenceLinks);
-                  }
-                }}
-                disabled={updatingEvidence}
-              >
-                <FiUpload size={15} />
-                {updatingEvidence ? '업데이트 중...' : '증빙자료 업데이트'}
-              </button>
-            )}
-          </div>
         </div>
       )}
 
@@ -260,7 +136,7 @@ export default function SnapshotPanel({
 
         {snapshots.length === 0 ? (
           <div className="snap-empty">
-            아직 저장된 기록이 없습니다. 위 저장 버튼으로 현재 상태를 기록하세요.
+            아직 저장된 기록이 없습니다.
           </div>
         ) : (
           <div className="snap-timeline">
