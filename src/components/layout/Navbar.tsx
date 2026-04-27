@@ -187,12 +187,12 @@ export default function Navbar() {
 
             {isLoggedIn ? (
               <div className="nav-user">
-                <span className="user-name">
+                <Link to="/profile" className="user-name user-name-link">
                   <FiUser size={14} />
-                  {profile?.display_name || profile?.email?.split('@')[0] || '사용자'}
+                  {profile?.display_name || profile?.email?.replace('@knc.id', '')?.split('@')[0] || '사용자'}
                   {badge && <span className={badge.className}>{badge.label}</span>}
                   {!badge && isAdmin && <span className="admin-badge">관리자</span>}
-                </span>
+                </Link>
                 <button className="btn-logout" onClick={signOut}>
                   <FiLogOut size={16} />
                 </button>

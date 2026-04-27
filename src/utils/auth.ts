@@ -66,3 +66,9 @@ export async function resetPassword(email: string) {
   });
   if (error) throw error;
 }
+
+export async function changePassword(newPassword: string) {
+  if (!supabase) throw new Error('Supabase not configured');
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) throw error;
+}

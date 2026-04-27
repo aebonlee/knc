@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { signInWithGoogle, signInWithKakao } from '../utils/auth';
+import { signInWithGoogle, signInWithKakao, signInWithEmail } from '../utils/auth';
 
 export default function Login() {
   const { isLoggedIn, loading, isCompanyMember, isPending, companyId } = useAuth();
   const [error, setError] = useState('');
+  const [loginId, setLoginId] = useState('');
+  const [password, setPassword] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   if (loading) return <div className="page-loading"><div className="spinner" /></div>;
   if (isLoggedIn) {
@@ -15,6 +18,21 @@ export default function Login() {
     }
     return <Navigate to="/" replace />;
   }
+
+  const handleIdLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!loginId.trim() || !password.trim()) return;
+    setError('');
+    setSubmitting(true);
+    try {
+      const email = loginId.trim().includes('@') ? loginId.trim() : `${loginId.trim()}@knc.id`;
+      await signInWithEmail(email, password);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : '아이디 또는 비밀번호가 올바르지 않습니다.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const handleSocialLogin = async (provider: 'google' | 'kakao') => {
     setError('');
@@ -159,7 +177,45 @@ export default function Login() {
           </div>
 
           <div className="login-desc">
-            <span>소셜 계정으로 간편하게 시작하세요</span>
+            <span>배정받은 아이디로 로그인하세요</span>
+          </div>
+
+          <form className="login-id-form" onSubmit={handleIdLogin}>
+            <div className="login-field">
+              <label htmlFor="loginId">아이디</label>
+              <input
+                id="loginId"
+                type="text"
+                placeholder="eng-01"
+                value={loginId}
+                onChange={e => setLoginId(e.target.value)}
+                autoComplete="username"
+              />
+            </div>
+            <div className="login-field">
+              <label htmlFor="loginPw">비밀번호</label>
+              <input
+                id="loginPw"
+                type="password"
+                placeholder="비밀번호 입력"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                autoComplete="current-password"
+              />
+            </div>
+            <button
+              type="submit"
+              className="login-submit-btn"
+              disabled={submitting || !loginId.trim() || !password.trim()}
+            >
+              {submitting ? '로그인 중...' : '로그인'}
+            </button>
+          </form>
+
+          {error && <p className="login-error">{error}</p>}
+
+          <div className="login-divider">
+            <span>또는 소셜 계정으로</span>
           </div>
 
           <div className="oauth-buttons">
@@ -187,12 +243,6 @@ export default function Login() {
               </svg>
               <span>카카오 로그인</span>
             </button>
-          </div>
-
-          {error && <p className="login-error">{error}</p>}
-
-          <div className="login-divider">
-            <span>안전한 성과 관리의 시작</span>
           </div>
 
           <div className="login-trust">

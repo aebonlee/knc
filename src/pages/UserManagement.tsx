@@ -28,6 +28,28 @@ interface PendingUser {
 // 개발자 계정 — 사용자 관리 목록에서 숨김
 const HIDDEN_EMAILS = ['aebon@kakao.com', 'aebon@kyonggi.ac.kr'];
 
+// 카테고리 탭 정의
+const CATEGORY_TABS = [
+  { key: 'eng', label: '공학', solutionType: '공학', prefix: 'eng', count: 36 },
+  { key: 'ppe', label: '보호구', solutionType: '보호구', prefix: 'ppe', count: 7 },
+  { key: 'edu', label: '행동교정', solutionType: '행동교정', prefix: 'edu', count: 7 },
+] as const;
+
+// company_no + solution_type에서 아이디 자동 파생
+function deriveLoginId(company: Company): string {
+  if (company.solution_type === '공학') {
+    return `eng-${String(company.company_no).padStart(2, '0')}`;
+  } else if (company.solution_type === '보호구') {
+    return `ppe-${String(company.company_no - 36).padStart(2, '0')}`;
+  } else {
+    return `edu-${String(company.company_no - 43).padStart(2, '0')}`;
+  }
+}
+
+function derivePassword(loginId: string): string {
+  return `${loginId}!`;
+}
+
 export default function UserManagement() {
   const { setImpersonateCompany } = useAuth();
   const navigate = useNavigate();
@@ -37,7 +59,7 @@ export default function UserManagement() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
-  // tab: 'pending' | 'assigned' | 'company-{id}'
+  // tab: 'pending' | 'assigned' | 'eng' | 'ppe' | 'edu'
   const [tab, setTab] = useState<string>('pending');
 
   // 빠른 승인 폼
@@ -213,9 +235,9 @@ export default function UserManagement() {
   };
 
   // 기업 모드 전환
-  const handleImpersonate = (companyId: string) => {
-    setImpersonateCompany(companyId);
-    navigate(`/companies/${companyId}/dashboard`);
+  const handleImpersonate = (cid: string) => {
+    setImpersonateCompany(cid);
+    navigate(`/companies/${cid}/dashboard`);
   };
 
   const filteredAssigned = users.filter(u =>
@@ -230,17 +252,11 @@ export default function UserManagement() {
     (u.display_name || '').toLowerCase().includes(search.toLowerCase()))
   );
 
-  // 기업별 배정 사용자 (company_member만)
-  const companiesWithMembers = companies.filter(c =>
-    users.some(u => u.company_id === c.id && u.role === 'company_member')
-  );
-
-  // 현재 탭이 기업 탭인 경우
-  const isCompanyTab = tab.startsWith('company-');
-  const currentCompanyId = isCompanyTab ? tab.replace('company-', '') : null;
-  const currentCompany = currentCompanyId ? companies.find(c => c.id === currentCompanyId) : null;
-  const currentCompanyUsers = currentCompanyId
-    ? users.filter(u => u.company_id === currentCompanyId && !HIDDEN_EMAILS.includes(u.email))
+  // 카테고리 탭인지 확인
+  const isCategoryTab = CATEGORY_TABS.some(c => c.key === tab);
+  const currentCategory = CATEGORY_TABS.find(c => c.key === tab);
+  const categoryCompanies = currentCategory
+    ? companies.filter(c => c.solution_type === currentCategory.solutionType)
     : [];
 
   if (loading) return <div className="page-loading"><div className="spinner" /></div>;
@@ -271,19 +287,16 @@ export default function UserManagement() {
           <span className="tab-count">{filteredAssigned.length}</span>
         </button>
         <span className="tab-divider" />
-        {companiesWithMembers.map(c => {
-          const memberCount = users.filter(u => u.company_id === c.id && u.role === 'company_member').length;
-          return (
-            <button
-              key={c.id}
-              className={`user-tab user-tab-company ${tab === `company-${c.id}` ? 'active' : ''}`}
-              onClick={() => setTab(`company-${c.id}`)}
-            >
-              {c.company_name}
-              <span className="tab-count">{memberCount}</span>
-            </button>
-          );
-        })}
+        {CATEGORY_TABS.map(cat => (
+          <button
+            key={cat.key}
+            className={`user-tab user-tab-company ${tab === cat.key ? 'active' : ''}`}
+            onClick={() => setTab(cat.key)}
+          >
+            {cat.label}
+            <span className="tab-count">{cat.count}</span>
+          </button>
+        ))}
       </div>
 
       <div className="user-mgmt-toolbar">
@@ -291,7 +304,7 @@ export default function UserManagement() {
           <FiSearch size={16} />
           <input
             type="text"
-            placeholder="이메일 또는 이름 검색..."
+            placeholder={isCategoryTab ? '기업명 또는 담당자 검색...' : '이메일 또는 이름 검색...'}
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
@@ -497,71 +510,54 @@ export default function UserManagement() {
         </div>
       )}
 
-      {/* 기업별 탭 */}
-      {isCompanyTab && currentCompany && (
-        <div className="company-tab-content">
-          <div className="company-tab-header">
-            <div className="company-tab-info">
-              <h2>No.{currentCompany.company_no} {currentCompany.company_name}</h2>
-              <p>{currentCompany.solution_type} · 담당자: {currentCompany.manager_name || '-'} · {currentCompany.manager_phone || '-'}</p>
-            </div>
-            <button
-              className="btn-impersonate"
-              onClick={() => handleImpersonate(currentCompany.id)}
-            >
-              <FiEye size={16} /> 기업 모드 전환
-            </button>
-          </div>
-
-          <div className="user-table-wrap">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>이메일</th>
-                  <th>이름</th>
-                  <th>연락처</th>
-                  <th>역할</th>
-                  <th>등록일</th>
-                  <th>관리</th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentCompanyUsers.length === 0 ? (
-                  <tr><td colSpan={6} className="table-empty">배정된 회원이 없습니다</td></tr>
-                ) : (
-                  currentCompanyUsers.map(u => (
-                    <tr key={u.id}>
-                      <td>{u.email}</td>
-                      <td>{u.display_name || '-'}</td>
-                      <td>{u.phone || '-'}</td>
-                      <td>
-                        <select
-                          value={u.role}
-                          onChange={e => updateRole(u.user_id, e.target.value as KncRole, u.company_id)}
-                          className="role-select"
-                          disabled={saving === u.user_id}
-                        >
-                          <option value="superadmin">총괄 관리자</option>
-                          <option value="manager">업무담당자</option>
-                          <option value="company_member">기업 입력회원</option>
-                        </select>
-                      </td>
-                      <td className="text-muted">{new Date(u.created_at).toLocaleDateString('ko-KR')}</td>
+      {/* 카테고리 탭 (공학 / 보호구 / 행동교정) */}
+      {isCategoryTab && currentCategory && (
+        <div className="user-table-wrap">
+          <table className="data-table category-table">
+            <thead>
+              <tr>
+                <th style={{ width: 50 }}>No</th>
+                <th>기업명</th>
+                <th>아이디</th>
+                <th>비밀번호</th>
+                <th>담당자명</th>
+                <th>연락처</th>
+                <th>이메일</th>
+                <th style={{ width: 90 }}>액션</th>
+              </tr>
+            </thead>
+            <tbody>
+              {categoryCompanies
+                .filter(c =>
+                  !search ||
+                  c.company_name.toLowerCase().includes(search.toLowerCase()) ||
+                  (c.manager_name || '').toLowerCase().includes(search.toLowerCase())
+                )
+                .map(c => {
+                  const lid = deriveLoginId(c);
+                  return (
+                    <tr key={c.id}>
+                      <td className="text-center">{c.company_no}</td>
+                      <td><strong>{c.company_name}</strong></td>
+                      <td><code className="login-id-code">{lid}</code></td>
+                      <td><code className="login-pw-code">{derivePassword(lid)}</code></td>
+                      <td>{c.manager_name || <span className="text-muted">미등록</span>}</td>
+                      <td>{c.manager_phone || <span className="text-muted">-</span>}</td>
+                      <td>{c.manager_email || <span className="text-muted">-</span>}</td>
                       <td>
                         <button
-                          className="btn-icon btn-danger-icon"
-                          onClick={() => deleteRole(u.user_id, u.email)}
-                          title="역할 삭제"
+                          className="btn-impersonate btn-xs"
+                          onClick={() => handleImpersonate(c.id)}
+                          title="기업 모드 전환"
                         >
-                          <FiTrash2 size={14} />
+                          <FiEye size={14} /> 전환
                         </button>
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  );
+                })}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
