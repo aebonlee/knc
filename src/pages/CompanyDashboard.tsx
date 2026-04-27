@@ -1,7 +1,8 @@
 import { useParams, Link, Navigate } from 'react-router-dom';
-import { FiArrowLeft, FiEdit2 } from 'react-icons/fi';
+import { FiArrowLeft, FiEdit2, FiExternalLink } from 'react-icons/fi';
 import { useAuth } from '../contexts/AuthContext';
 import { useCompanyDashboard } from '../hooks/useCompanyDashboard';
+import { getPadletUrl } from '../hooks/useCompanyData';
 import CompanyKpiCards from '../components/dashboard/CompanyKpiCards';
 import SavingsChart from '../components/dashboard/SavingsChart';
 import RiskBarChart from '../components/dashboard/RiskBarChart';
@@ -50,7 +51,12 @@ export default function CompanyDashboard() {
       </div>
 
       <div className="page-header">
-        <h1>{company.company_name} 대시보드</h1>
+        <div className="summary-name-row">
+          <h1>{company.company_name} 대시보드</h1>
+          <a href={getPadletUrl(company)} target="_blank" rel="noopener noreferrer" className="padlet-link" title="패들릿 자료실">
+            <FiExternalLink size={16} /> 패들릿
+          </a>
+        </div>
         <p>
           No.{company.company_no} · {company.solution_type} ·
           담당자: {company.manager_name || '-'}

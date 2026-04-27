@@ -63,6 +63,23 @@ export const formatWon = (value: number): string => {
   return new Intl.NumberFormat('ko-KR').format(Math.round(value)) + '원';
 };
 
+// 기업별 패들릿 URL
+export const getPadletUrl = (company: { company_no: number; solution_type: string }): string => {
+  let prefix: string;
+  let seq: number;
+  if (company.solution_type === '보호구') {
+    prefix = 'ppe';
+    seq = company.company_no - 36;
+  } else if (company.solution_type === '행동교정') {
+    prefix = 'edu';
+    seq = company.company_no - 43;
+  } else {
+    prefix = 'eng';
+    seq = company.company_no;
+  }
+  return `https://padlet.com/aebon/${prefix}_${String(seq).padStart(2, '0')}`;
+};
+
 // 숫자 포맷 (백만원 단위)
 export const formatMillion = (value: number): string => {
   return new Intl.NumberFormat('ko-KR').format(Math.round(value)) + '백만원';
