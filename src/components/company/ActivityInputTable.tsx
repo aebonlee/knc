@@ -49,13 +49,14 @@ interface Props {
   activities: Activity[];
   month: string;
   unitPrices: CompanyUnitPrice[];
+  solutionType?: string;
   onChanged: () => void;
   onUnitPriceChanged: () => void;
 }
 
 export default function ActivityInputTable({
   companyId, referenceData, demandCompanies, activities,
-  month, unitPrices, onChanged, onUnitPriceChanged,
+  month, unitPrices, solutionType, onChanged, onUnitPriceChanged,
 }: Props) {
   const [saving, setSaving] = useState<string | null>(null);
 
@@ -130,7 +131,17 @@ export default function ActivityInputTable({
     }
   }, [companyId, unitPrices, onUnitPriceChanged]);
 
-  const activityTypes: ActivityType[] = ['engineering', 'ppe', 'education'];
+  // solution_type에 따라 해당 활동유형만 표시
+  const allTypes: ActivityType[] = ['engineering', 'ppe', 'education'];
+  const SOLUTION_TYPE_MAP: Record<string, ActivityType> = {
+    '공학': 'engineering',
+    '보호구': 'ppe',
+    '행동교정': 'education',
+  };
+  const activityTypes: ActivityType[] = solutionType && SOLUTION_TYPE_MAP[solutionType]
+    ? [SOLUTION_TYPE_MAP[solutionType]]
+    : allTypes;
+  const typeCount = activityTypes.length;
   const hasDemands = monthDemands.length > 0;
 
   const getRiskSubtotal = (riskNo: number, type: ActivityType) => {
@@ -189,8 +200,8 @@ export default function ActivityInputTable({
                   <tr key={`${ref.no}-${type}`} className={typeIdx === 0 ? 'risk-group-start' : ''}>
                     {typeIdx === 0 && (
                       <>
-                        <td rowSpan={3} className="cell-no">{ref.no}</td>
-                        <td rowSpan={3} className="cell-risk">{ref.risk_name}</td>
+                        <td rowSpan={typeCount} className="cell-no">{ref.no}</td>
+                        <td rowSpan={typeCount} className="cell-risk">{ref.risk_name}</td>
                       </>
                     )}
                     <td className="cell-type">
@@ -233,7 +244,7 @@ export default function ActivityInputTable({
                   전체 합계
                   <span className="formula-tooltip-wrap" style={{ marginLeft: 4 }}>
                     <span className="formula-icon">?</span>
-                    <span className="formula-balloon">= Σ (13개 위험요인 × 3개 활동유형 소계)</span>
+                    <span className="formula-balloon">= Σ (13개 위험요인 × {typeCount}개 활동유형 소계)</span>
                   </span>
                 </strong>
               </td>

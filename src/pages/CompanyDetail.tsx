@@ -471,6 +471,7 @@ export default function CompanyDetail() {
             activities={activities}
             month={selectedMonth}
             unitPrices={unitPrices}
+            solutionType={company.solution_type}
             onChanged={fetchData}
             onUnitPriceChanged={fetchData}
           />
