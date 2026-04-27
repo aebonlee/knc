@@ -63,7 +63,7 @@ export const formatWon = (value: number): string => {
   return new Intl.NumberFormat('ko-KR').format(Math.round(value)) + '원';
 };
 
-// 기업별 패들릿 URL
+// 기업별 증빙 자료등록 URL (Padlet)
 export const getPadletUrl = (company: { company_no: number; solution_type: string }): string => {
   let prefix: string;
   let seq: number;

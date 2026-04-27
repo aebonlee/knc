@@ -53,8 +53,8 @@ export default function CompanyDashboard() {
       <div className="page-header">
         <div className="summary-name-row">
           <h1>{company.company_name} 대시보드</h1>
-          <a href={getPadletUrl(company)} target="_blank" rel="noopener noreferrer" className="padlet-link" title="패들릿 자료실">
-            <FiExternalLink size={16} /> 패들릿
+          <a href={getPadletUrl(company)} target="_blank" rel="noopener noreferrer" className="padlet-link" title="증빙 자료등록">
+            <FiExternalLink size={16} /> 증빙 자료등록
           </a>
         </div>
         <p>

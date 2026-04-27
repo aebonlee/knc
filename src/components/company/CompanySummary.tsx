@@ -17,9 +17,9 @@ export default function CompanySummary({ company, totalSaving, monthSaving }: Pr
           <div className="summary-name-row">
             <h2>{company.company_name}</h2>
             {padletUrl && (
-              <a href={padletUrl} target="_blank" rel="noopener noreferrer" className="padlet-link" title="패들릿 자료실">
+              <a href={padletUrl} target="_blank" rel="noopener noreferrer" className="padlet-link" title="증빙 자료등록">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                패들릿
+                증빙 자료등록
               </a>
             )}
           </div>
