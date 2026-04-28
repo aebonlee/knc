@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FiRotateCcw, FiTrash2, FiClock, FiSend, FiCheck, FiAlertCircle, FiXCircle, FiFileText } from 'react-icons/fi';
+import { FiRotateCcw, FiTrash2, FiClock, FiSend, FiCheck, FiAlertCircle, FiXCircle, FiFileText, FiExternalLink } from 'react-icons/fi';
 import { formatWon } from '../../hooks/useCompanyData';
 import type { ActivitySnapshot, ReferenceData, Submission } from '../../types';
 import { getWeight } from '../../hooks/useCompanyData';
@@ -19,6 +19,8 @@ interface Props {
   onSave: (memo: string) => void;
   onRestore: (snapshot: ActivitySnapshot) => void;
   onDelete: (snapshotId: string) => void;
+  // 패들릿
+  padletUrl?: string;
   // 제출 관련
   submission?: Submission | null;
   submitting?: boolean;
@@ -49,7 +51,7 @@ function formatDateTime(iso: string) {
 
 export default function SnapshotPanel({
   snapshots, month, referenceData, onRestore, onDelete,
-  submission, submitting, onSubmit, cancelling, onCancel,
+  padletUrl, submission, submitting, onSubmit, cancelling, onCancel,
 }: Props) {
   const [approvalMemo, setApprovalMemo] = useState('');
 
@@ -92,6 +94,15 @@ export default function SnapshotPanel({
               데이터를 수정한 후 다시 제출할 수 있습니다
             </span>
           )}
+        </div>
+      )}
+
+      {/* 패들릿 증빙 자료등록 */}
+      {padletUrl && onSubmit && canSubmit && (
+        <div className="snap-padlet-section">
+          <a href={padletUrl} target="_blank" rel="noopener noreferrer" className="snap-padlet-btn">
+            <FiExternalLink size={15} /> 증빙 자료등록 (Padlet)
+          </a>
         </div>
       )}
 

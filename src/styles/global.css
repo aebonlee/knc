@@ -4561,6 +4561,30 @@ html[data-theme="dark"] .risk-row-target:hover {
 }
 
 /* =====================================================
+   Snapshot: Padlet Link (증빙 자료등록)
+   ===================================================== */
+.snap-padlet-section {
+  margin-top: 12px;
+}
+.snap-padlet-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  background: #FF6D00;
+  color: #fff;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+.snap-padlet-btn:hover {
+  background: #E65100;
+  color: #fff;
+}
+
+/* =====================================================
    Snapshot: Approval Memo (결재 메모)
    ===================================================== */
 .snap-approval-section {

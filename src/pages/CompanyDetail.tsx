@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { FiArrowLeft, FiEdit2, FiPlus, FiTrash2 } from 'react-icons/fi';
 import { supabase, TABLES } from '../utils/supabase';
-import { getWeight } from '../hooks/useCompanyData';
+import { getWeight, getPadletUrl } from '../hooks/useCompanyData';
 import { useAuth } from '../contexts/AuthContext';
 import { notifyMultiple, notifyAdminsEmailSMS } from '../utils/notifications';
 import CompanySummary from '../components/company/CompanySummary';
@@ -495,6 +495,7 @@ export default function CompanyDetail() {
             onSave={saveSnapshot}
             onRestore={restoreSnapshot}
             onDelete={deleteSnapshot}
+            padletUrl={getPadletUrl(company)}
             submission={currentSubmission}
             submitting={submitting}
             onSubmit={submitForReview}
