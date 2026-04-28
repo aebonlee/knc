@@ -13,6 +13,23 @@ interface EditableRow {
   weight_education: number;
 }
 
+const DEFAULT_RISK_NAMES = [
+  '떨어짐', '넘어짐', '깔림·뒤집힘', '부딪힘', '물체에 맞음',
+  '무너짐', '끼임', '절단·베임·찔림', '화재·폭발·파열', '교통사고',
+  '무리한 동작', '감전', '기타',
+];
+
+const createDefaultRows = (): EditableRow[] =>
+  DEFAULT_RISK_NAMES.map((name, i) => ({
+    id: null,
+    no: i + 1,
+    risk_name: name,
+    social_cost: 0,
+    weight_engineering: 0.70,
+    weight_ppe: 0.15,
+    weight_education: 0.15,
+  }));
+
 export default function UnitPriceManager() {
   const [rows, setRows] = useState<EditableRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,6 +53,8 @@ export default function UnitPriceManager() {
         weight_ppe: r.weight_ppe,
         weight_education: r.weight_education,
       })));
+    } else {
+      setRows(createDefaultRows());
     }
     setLoading(false);
   };
