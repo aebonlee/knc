@@ -165,9 +165,9 @@ a { color: inherit; text-decoration: none; }
 }
 
 .brand-dash {
-  color: var(--text-secondary);
-  font-weight: 500;
-  font-size: 0.85em;
+  color: var(--primary);
+  font-weight: 800;
+  font-size: 1.2em;
 }
 
 /* 사업 차수 토글 */
