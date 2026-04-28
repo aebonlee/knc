@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import {
   FiBarChart2, FiBriefcase, FiAlertTriangle, FiTrendingUp, FiFileText,
   FiInfo, FiCheckCircle, FiDownload, FiSend, FiBell, FiCalendar, FiLayers,
+  FiSettings,
 } from 'react-icons/fi';
 
 const MENUS = [
@@ -11,6 +12,7 @@ const MENUS = [
   { icon: <FiTrendingUp size={20} />, title: '성과 분석', desc: '사업비 대비 절감 성과를 분석하고 성과목표 달성 여부를 판정합니다. 월별 필터, 기업별 비교, Excel 다운로드를 지원합니다.' },
   { icon: <FiFileText size={20} />, title: '보고서', desc: '전체 통합, 기업별 개별, 월별 등 3종의 PDF 보고서를 자동 생성합니다. 인쇄 및 다운로드가 가능합니다.' },
   { icon: <FiSend size={20} />, title: '제출 관리', desc: '기업 월별 실적 제출을 검토하고 승인/보완요청/반려 처리를 합니다. 코멘트를 남길 수 있습니다. (관리자 전용)' },
+  { icon: <FiSettings size={20} />, title: '절감단가 관리', desc: '위험요인별 사회비용과 1건당 절감단가를 등록·수정합니다. 사회비용 또는 단가를 직접 편집할 수 있습니다. (총괄 관리자 전용)' },
 ];
 
 const FEATURES = [
@@ -32,7 +34,7 @@ const STEPS = [
 ];
 
 const ROLES = [
-  { role: '총괄 관리자', code: 'superadmin', access: '모든 기능 + 사용자 관리 + 제출 관리', color: '#DC2626' },
+  { role: '총괄 관리자', code: 'superadmin', access: '모든 기능 + 사용자 관리 + 제출 관리 + 절감단가 관리', color: '#DC2626' },
   { role: '업무담당자', code: 'manager', access: '모든 기업 데이터 열람/편집 + 제출 관리', color: '#2563EB' },
   { role: '기업 입력회원', code: 'company_member', access: '자기 기업만 열람/입력/제출', color: '#059669' },
 ];

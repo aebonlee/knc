@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase, TABLES } from '../utils/supabase';
-import { DEFAULT_REFERENCE_DATA } from '../data/referenceData';
 import { getCompanyTotal, getActivitySaving } from './useCompanyData';
 import type {
   Company, DemandCompany, Activity, ReferenceData,
@@ -21,7 +20,7 @@ export function useCompanyDashboard(companyId: string | undefined) {
   const [company, setCompany] = useState<Company | null>(null);
   const [demandCompanies, setDemandCompanies] = useState<DemandCompany[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
-  const [referenceData, setReferenceData] = useState<ReferenceData[]>(DEFAULT_REFERENCE_DATA);
+  const [referenceData, setReferenceData] = useState<ReferenceData[]>([]);
   const [settings, setSettings] = useState<ProjectSettings>(DEFAULT_SETTINGS);
   const [companyMonths, setCompanyMonths] = useState<CompanyMonth[]>([]);
   const [unitPrices, setUnitPrices] = useState<CompanyUnitPrice[]>([]);

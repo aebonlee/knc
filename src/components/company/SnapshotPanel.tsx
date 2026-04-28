@@ -48,7 +48,7 @@ function formatDateTime(iso: string) {
 }
 
 export default function SnapshotPanel({
-  snapshots, month, referenceData, saving, onSave, onRestore, onDelete,
+  snapshots, month, referenceData, onRestore, onDelete,
   submission, submitting, onSubmit, cancelling, onCancel,
 }: Props) {
   const [approvalMemo, setApprovalMemo] = useState('');

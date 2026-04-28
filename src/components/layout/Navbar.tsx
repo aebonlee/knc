@@ -72,6 +72,7 @@ export default function Navbar() {
       items.push({ path: '/admin/submissions', label: '제출 관리' });
     }
     if (isSuperadmin) {
+      items.push({ path: '/admin/unit-prices', label: '절감단가 관리' });
       items.push({ path: '/admin/users', label: '사용자 관리' });
     }
     return items;

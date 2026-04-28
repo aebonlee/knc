@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { FiArrowLeft, FiEdit2, FiPlus, FiTrash2 } from 'react-icons/fi';
 import { supabase, TABLES } from '../utils/supabase';
-import { DEFAULT_REFERENCE_DATA } from '../data/referenceData';
 import { getWeight } from '../hooks/useCompanyData';
 import { useAuth } from '../contexts/AuthContext';
 import { notifyMultiple, notifyAdminsEmailSMS } from '../utils/notifications';
@@ -21,14 +20,10 @@ export default function CompanyDetail() {
   const { id } = useParams<{ id: string }>();
   const { isCompanyMember, companyId, user, impersonateCompanyId } = useAuth();
 
-  // company_member가 다른 기업 접근 시 리다이렉트 (impersonate 모드 제외)
-  if (!impersonateCompanyId && isCompanyMember && companyId && id !== companyId) {
-    return <Navigate to={`/companies/${companyId}/dashboard`} replace />;
-  }
   const [company, setCompany] = useState<Company | null>(null);
   const [demandCompanies, setDemandCompanies] = useState<DemandCompany[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
-  const [referenceData, setReferenceData] = useState<ReferenceData[]>(DEFAULT_REFERENCE_DATA);
+  const [referenceData, setReferenceData] = useState<ReferenceData[]>([]);
   const [companyMonths, setCompanyMonths] = useState<CompanyMonth[]>([]);
   const [unitPrices, setUnitPrices] = useState<CompanyUnitPrice[]>([]);
   const [snapshots, setSnapshots] = useState<ActivitySnapshot[]>([]);
@@ -91,6 +86,11 @@ export default function CompanyDetail() {
       .map(a => a.risk_no),
     [monthAssessments],
   );
+
+  // company_member가 다른 기업 접근 시 리다이렉트 (impersonate 모드 제외)
+  if (!impersonateCompanyId && isCompanyMember && companyId && id !== companyId) {
+    return <Navigate to={`/companies/${companyId}/dashboard`} replace />;
+  }
 
   const addMonth = async () => {
     if (!supabase || !id || !newMonth) return;

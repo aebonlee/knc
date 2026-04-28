@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase, TABLES } from '../utils/supabase';
-import { DEFAULT_REFERENCE_DATA } from '../data/referenceData';
 import type {
   Company, DemandCompany, Activity, ReferenceData,
   ProjectSettings, CompanyWithSavings, RiskSummary, ActivityType,
@@ -99,7 +98,7 @@ export function useCompanyData(phaseFilter?: number, monthFilter?: string[]) {
   const [allCompanies, setAllCompanies] = useState<Company[]>([]);
   const [allDemandCompanies, setAllDemandCompanies] = useState<DemandCompany[]>([]);
   const [allActivities, setAllActivities] = useState<Activity[]>([]);
-  const [referenceData, setReferenceData] = useState<ReferenceData[]>(DEFAULT_REFERENCE_DATA);
+  const [referenceData, setReferenceData] = useState<ReferenceData[]>([]);
   const [unitPrices, setUnitPrices] = useState<CompanyUnitPrice[]>([]);
   const [allSettings, setAllSettings] = useState<ProjectSettings[]>([]);
   const [loading, setLoading] = useState(true);

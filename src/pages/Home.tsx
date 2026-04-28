@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { FiEdit2 } from 'react-icons/fi';
 import { useCompanyData, getActivitySaving, formatBillion } from '../hooks/useCompanyData';
 import { useCompanyDashboard } from '../hooks/useCompanyDashboard';
+import { usePhase } from '../contexts/PhaseContext';
 import KpiCards from '../components/dashboard/KpiCards';
 import CompanyKpiCards from '../components/dashboard/CompanyKpiCards';
 import SavingsChart from '../components/dashboard/SavingsChart';
@@ -63,7 +64,7 @@ const PHASE_MONTHS: Record<number, number[]> = {
 };
 
 export default function Home() {
-  const [dashPhase, setDashPhase] = useState<number>(0);
+  const { phase: dashPhase, setPhase: setDashPhase } = usePhase();
   const [dashMonths, setDashMonths] = useState<string[]>([]);
   const [selectedCompanyId, setSelectedCompanyId] = useState('');
 

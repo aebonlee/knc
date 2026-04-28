@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { DEFAULT_REFERENCE_DATA, ACTIVITY_TYPE_LABELS } from '../data/referenceData';
-import type { ActivityType } from '../types';
+import { useState, useEffect } from 'react';
+import { ACTIVITY_TYPE_LABELS } from '../data/referenceData';
+import { supabase, TABLES } from '../utils/supabase';
+import type { ReferenceData, ActivityType } from '../types';
 
 const formatWon = (v: number) => new Intl.NumberFormat('ko-KR').format(Math.round(v)) + '원';
 
@@ -34,14 +35,27 @@ const PERFORMANCE_CRITERIA = [
 ];
 
 export default function Formulas() {
+  const [referenceData, setReferenceData] = useState<ReferenceData[]>([]);
+  const [loading, setLoading] = useState(true);
   const [calcRisk, setCalcRisk] = useState(1);
   const [calcType, setCalcType] = useState<ActivityType>('engineering');
   const [calcCount, setCalcCount] = useState(1);
 
-  const ref = DEFAULT_REFERENCE_DATA.find(r => r.no === calcRisk)!;
-  const weight = calcType === 'engineering' ? ref.weight_engineering
-    : calcType === 'ppe' ? ref.weight_ppe : ref.weight_education;
-  const unitSaving = ref.social_cost * weight;
+  useEffect(() => {
+    if (!supabase) { setLoading(false); return; }
+    supabase.from(TABLES.reference_data).select('*').order('no')
+      .then(({ data }) => {
+        if (data && data.length > 0) setReferenceData(data);
+        setLoading(false);
+      });
+  }, []);
+
+  const ref = referenceData.find(r => r.no === calcRisk);
+  const weight = ref
+    ? (calcType === 'engineering' ? ref.weight_engineering
+      : calcType === 'ppe' ? ref.weight_ppe : ref.weight_education)
+    : 0;
+  const unitSaving = ref ? ref.social_cost * weight : 0;
   const totalCalc = unitSaving * calcCount;
 
   return (
@@ -54,32 +68,40 @@ export default function Formulas() {
       {/* 위험요인별 사회비용 */}
       <section className="formula-section">
         <h2>위험요인별 사회비용</h2>
-        <div className="table-scroll">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>No</th>
-                <th>위험요인</th>
-                <th>사회비용 (원)</th>
-                <th>공학 (0.70)</th>
-                <th>보호구 (0.15)</th>
-                <th>교육 (0.15)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {DEFAULT_REFERENCE_DATA.map(r => (
-                <tr key={r.no}>
-                  <td>{r.no}</td>
-                  <td><strong>{r.risk_name}</strong></td>
-                  <td className="text-right">{formatWon(r.social_cost)}</td>
-                  <td className="text-right">{formatWon(r.social_cost * r.weight_engineering)}</td>
-                  <td className="text-right">{formatWon(r.social_cost * r.weight_ppe)}</td>
-                  <td className="text-right">{formatWon(r.social_cost * r.weight_education)}</td>
+        {loading ? (
+          <div className="page-loading"><div className="spinner" /></div>
+        ) : referenceData.length === 0 ? (
+          <div className="empty-state">
+            <p>관리자가 절감단가를 등록해주세요.</p>
+          </div>
+        ) : (
+          <div className="table-scroll">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>No</th>
+                  <th>위험요인</th>
+                  <th>사회비용 (원)</th>
+                  <th>공학 ({referenceData[0]?.weight_engineering ?? 0.70})</th>
+                  <th>보호구 ({referenceData[0]?.weight_ppe ?? 0.15})</th>
+                  <th>교육 ({referenceData[0]?.weight_education ?? 0.15})</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {referenceData.map(r => (
+                  <tr key={r.no}>
+                    <td>{r.no}</td>
+                    <td><strong>{r.risk_name}</strong></td>
+                    <td className="text-right">{formatWon(r.social_cost)}</td>
+                    <td className="text-right">{formatWon(r.social_cost * r.weight_engineering)}</td>
+                    <td className="text-right">{formatWon(r.social_cost * r.weight_ppe)}</td>
+                    <td className="text-right">{formatWon(r.social_cost * r.weight_education)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
 
       {/* 산출 공식 */}
@@ -120,54 +142,60 @@ export default function Formulas() {
       {/* 절감액 계산기 */}
       <section className="formula-section">
         <h2>절감액 계산기</h2>
-        <div className="calculator-card">
-          <div className="calc-inputs">
-            <div className="calc-field">
-              <label>위험요인</label>
-              <select value={calcRisk} onChange={e => setCalcRisk(Number(e.target.value))}>
-                {DEFAULT_REFERENCE_DATA.map(r => (
-                  <option key={r.no} value={r.no}>{r.no}. {r.risk_name}</option>
-                ))}
-              </select>
-            </div>
-            <div className="calc-field">
-              <label>활동유형</label>
-              <select value={calcType} onChange={e => setCalcType(e.target.value as ActivityType)}>
-                <option value="engineering">{ACTIVITY_TYPE_LABELS.engineering}</option>
-                <option value="ppe">{ACTIVITY_TYPE_LABELS.ppe}</option>
-                <option value="education">{ACTIVITY_TYPE_LABELS.education}</option>
-              </select>
-            </div>
-            <div className="calc-field">
-              <label>활동횟수</label>
-              <input
-                type="number"
-                min={0}
-                value={calcCount}
-                onChange={e => setCalcCount(Math.max(0, Number(e.target.value)))}
-              />
-            </div>
+        {referenceData.length === 0 ? (
+          <div className="empty-state">
+            <p>기준 데이터가 없습니다. 관리자가 절감단가를 먼저 등록해야 합니다.</p>
           </div>
+        ) : (
+          <div className="calculator-card">
+            <div className="calc-inputs">
+              <div className="calc-field">
+                <label>위험요인</label>
+                <select value={calcRisk} onChange={e => setCalcRisk(Number(e.target.value))}>
+                  {referenceData.map(r => (
+                    <option key={r.no} value={r.no}>{r.no}. {r.risk_name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="calc-field">
+                <label>활동유형</label>
+                <select value={calcType} onChange={e => setCalcType(e.target.value as ActivityType)}>
+                  <option value="engineering">{ACTIVITY_TYPE_LABELS.engineering}</option>
+                  <option value="ppe">{ACTIVITY_TYPE_LABELS.ppe}</option>
+                  <option value="education">{ACTIVITY_TYPE_LABELS.education}</option>
+                </select>
+              </div>
+              <div className="calc-field">
+                <label>활동횟수</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={calcCount}
+                  onChange={e => setCalcCount(Math.max(0, Number(e.target.value)))}
+                />
+              </div>
+            </div>
 
-          <div className="calc-result">
-            <div className="calc-row">
-              <span>사회비용</span>
-              <span>{formatWon(ref.social_cost)}</span>
-            </div>
-            <div className="calc-row">
-              <span>가중치</span>
-              <span>{weight}</span>
-            </div>
-            <div className="calc-row">
-              <span>1건당 절감단가</span>
-              <span>{formatWon(unitSaving)}</span>
-            </div>
-            <div className="calc-row calc-total">
-              <span>총 절감액 ({calcCount}건)</span>
-              <span>{formatWon(totalCalc)}</span>
+            <div className="calc-result">
+              <div className="calc-row">
+                <span>사회비용</span>
+                <span>{ref ? formatWon(ref.social_cost) : '-'}</span>
+              </div>
+              <div className="calc-row">
+                <span>가중치</span>
+                <span>{weight}</span>
+              </div>
+              <div className="calc-row">
+                <span>1건당 절감단가</span>
+                <span>{formatWon(unitSaving)}</span>
+              </div>
+              <div className="calc-row calc-total">
+                <span>총 절감액 ({calcCount}건)</span>
+                <span>{formatWon(totalCalc)}</span>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </section>
     </div>
   );

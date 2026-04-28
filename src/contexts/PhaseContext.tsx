@@ -6,12 +6,12 @@ interface PhaseContextType {
   setPhase: (p: number) => void;
 }
 
-const PhaseContext = createContext<PhaseContextType>({ phase: 1, setPhase: () => {} });
+const PhaseContext = createContext<PhaseContextType>({ phase: 0, setPhase: () => {} });
 
 export function PhaseProvider({ children }: { children: ReactNode }) {
   const [phase, setPhaseState] = useState<number>(() => {
     const saved = localStorage.getItem('knc_phase');
-    return saved ? Number(saved) : 1;
+    return saved !== null ? Number(saved) : 0;
   });
 
   const setPhase = (p: number) => {
