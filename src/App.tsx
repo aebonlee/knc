@@ -64,6 +64,19 @@ function HomeRedirect() {
   return <Home />;
 }
 
+function AppLayout() {
+  const { impersonateCompanyId } = useAuth();
+  return (
+    <div className="app-layout">
+      <Navbar />
+      <main className={`main-content${impersonateCompanyId ? ' main-impersonate' : ''}`}>
+        <AppRoutes />
+      </main>
+      <Footer />
+    </div>
+  );
+}
+
 function AppRoutes() {
   return (
     <Suspense fallback={<Loading />}>
@@ -95,13 +108,7 @@ export default function App() {
       <AuthProvider>
         <PhaseProvider>
         <Router>
-          <div className="app-layout">
-            <Navbar />
-            <main className="main-content">
-              <AppRoutes />
-            </main>
-            <Footer />
-          </div>
+          <AppLayout />
         </Router>
         </PhaseProvider>
       </AuthProvider>

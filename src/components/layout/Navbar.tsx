@@ -90,16 +90,6 @@ export default function Navbar() {
 
   return (
     <>
-    {/* 기업 모드 전환 배너 */}
-    {impersonateCompanyId && impersonatedCompany && (
-      <div className="impersonate-bar">
-        <FiEye size={16} />
-        <strong>{impersonatedCompany.company_name}</strong> 기업 모드 보기 중
-        <button className="impersonate-bar-close" onClick={() => setImpersonateCompany(null)}>
-          <FiXCircle size={16} /> 해제
-        </button>
-      </div>
-    )}
     <nav className={`navbar${impersonateCompanyId ? ' navbar-impersonate' : ''}`}>
       <div className="nav-container">
         <Link to="/" className="nav-brand">
@@ -203,6 +193,16 @@ export default function Navbar() {
         </div>
       </div>
     </nav>
+    {/* 기업 모드 전환 배너 — navbar 바로 아래 */}
+    {impersonateCompanyId && impersonatedCompany && (
+      <div className="impersonate-bar">
+        <FiEye size={16} />
+        <strong>{impersonatedCompany.company_name}</strong> 기업 모드 보기 중
+        <button className="impersonate-bar-close" onClick={() => setImpersonateCompany(null)}>
+          <FiXCircle size={16} /> 해제
+        </button>
+      </div>
+    )}
     </>
   );
 }

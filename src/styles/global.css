@@ -124,6 +124,9 @@ a { color: inherit; text-decoration: none; }
   overflow: auto;
   min-height: 0;
 }
+.main-content.main-impersonate {
+  padding-top: calc(var(--nav-height) + 36px);
+}
 
 /* =====================================================
    Navbar
@@ -4332,9 +4335,11 @@ html[data-theme="dark"] .submission-evidence-link {
    기업 모드 전환 (Impersonate)
    ===================================================== */
 .impersonate-bar {
-  position: sticky;
-  top: 0;
-  z-index: 1001;
+  position: fixed;
+  top: var(--nav-height);
+  left: 0;
+  right: 0;
+  z-index: 99;
   display: flex;
   align-items: center;
   justify-content: center;
