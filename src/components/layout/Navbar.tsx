@@ -10,14 +10,8 @@ import type { Company } from '../../types';
 
 const COLOR_THEMES = site.colors as { name: string; color: string }[];
 
-const ROLE_BADGE: Record<string, { label: string; className: string }> = {
-  superadmin: { label: '총괄 관리자', className: 'role-badge role-badge-superadmin' },
-  manager: { label: '업무담당자', className: 'role-badge role-badge-manager' },
-  company_member: { label: '기업회원', className: 'role-badge role-badge-company' },
-};
-
 export default function Navbar() {
-  const { isLoggedIn, profile, isAdmin, kncRole, isSuperadmin, isCompanyMember, isPending, companyId, canEdit, impersonateCompanyId, setImpersonateCompany, signOut } = useAuth();
+  const { isLoggedIn, profile, kncRole, isSuperadmin, isCompanyMember, isPending, companyId, canEdit, impersonateCompanyId, setImpersonateCompany, signOut } = useAuth();
   const { theme, colorTheme, toggleTheme, setColorTheme } = useTheme();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -83,10 +77,6 @@ export default function Navbar() {
   const externalLinks: { href: string; label: string }[] = [];
 
   const isActive = (path: string) => location.pathname === path;
-
-  const badge = isPending
-    ? { label: '승인대기', className: 'role-badge role-badge-pending' }
-    : kncRole ? ROLE_BADGE[kncRole] : null;
 
   return (
     <>
