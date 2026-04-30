@@ -536,7 +536,7 @@ export default function UserManagement() {
                 <th>담당자명</th>
                 <th>연락처</th>
                 <th>이메일</th>
-                <th style={{ width: 150 }}>액션</th>
+                <th style={{ width: 90 }}>액션</th>
               </tr>
             </thead>
             <tbody>
@@ -553,7 +553,18 @@ export default function UserManagement() {
                       <td className="text-center">{c.company_no}</td>
                       <td><strong>{c.company_name}</strong></td>
                       <td><code className="login-id-code">{lid}</code></td>
-                      <td><code className="login-pw-code">{c.initial_password || '-'}</code></td>
+                      <td>
+                        <code className="login-pw-code">{c.initial_password || '-'}</code>
+                        <button
+                          className="btn-icon btn-xs"
+                          onClick={() => handleResetPassword(c.id, c.company_name)}
+                          disabled={resettingId === c.id}
+                          title="비밀번호 초기화"
+                          style={{ marginLeft: 4 }}
+                        >
+                          <FiRotateCcw size={14} />
+                        </button>
+                      </td>
                       <td>{c.manager_name || <span className="text-muted">미등록</span>}</td>
                       <td>{c.manager_phone || <span className="text-muted">-</span>}</td>
                       <td>{c.manager_email || <span className="text-muted">-</span>}</td>
@@ -564,15 +575,6 @@ export default function UserManagement() {
                           title="기업 모드 전환"
                         >
                           <FiEye size={14} /> 전환
-                        </button>
-                        <button
-                          className="btn-icon btn-xs"
-                          onClick={() => handleResetPassword(c.id, c.company_name)}
-                          disabled={resettingId === c.id}
-                          title="비밀번호 초기화"
-                          style={{ marginLeft: 4 }}
-                        >
-                          <FiRotateCcw size={14} /> 초기화
                         </button>
                       </td>
                     </tr>
