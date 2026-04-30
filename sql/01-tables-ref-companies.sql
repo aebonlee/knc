@@ -57,6 +57,7 @@ CREATE TABLE knc_companies (
   sub_manager_phone TEXT,
   budget NUMERIC,
   solution_type TEXT DEFAULT '공학',
+  initial_password TEXT,
   created_at TIMESTAMPTZ DEFAULT now()
 );
 

@@ -15,20 +15,31 @@ SET solution_type = '공학'
 WHERE company_no = 42;
 
 -- 2. 에일리언테크놀로지아시아: ppe-06@knc.id → eng-37@knc.id
+--    (기존 eng-37@knc.id 중복 계정이 있으면 먼저 제거)
 DO $$
 DECLARE
-  v_uid UUID;
+  v_uid UUID;          -- ppe-06 (에일리언테크놀로지아시아) 실제 uid
+  v_dup_uid UUID;      -- eng-37 중복 계정 uid
   v_new_email TEXT := 'eng-37@knc.id';
   v_new_pw TEXT := 'eng-37!';
   v_pw_hash TEXT;
 BEGIN
-  -- 기존 사용자 찾기
+  -- 중복 eng-37@knc.id 계정 제거
+  SELECT id INTO v_dup_uid FROM auth.users WHERE email = v_new_email;
+  IF v_dup_uid IS NOT NULL THEN
+    DELETE FROM knc_user_roles WHERE user_id = v_dup_uid;
+    DELETE FROM user_profiles WHERE id = v_dup_uid;
+    DELETE FROM auth.identities WHERE user_id = v_dup_uid;
+    DELETE FROM auth.users WHERE id = v_dup_uid;
+    RAISE NOTICE '중복 eng-37@knc.id 계정 제거 (uid=%)', v_dup_uid;
+  END IF;
+
+  -- 실제 에일리언테크놀로지아시아 계정 찾기
   SELECT id INTO v_uid FROM auth.users WHERE email = 'ppe-06@knc.id';
 
   IF v_uid IS NOT NULL THEN
     v_pw_hash := crypt(v_new_pw, gen_salt('bf'));
 
-    -- auth.users 업데이트
     UPDATE auth.users
     SET email = v_new_email,
         encrypted_password = v_pw_hash,
@@ -36,14 +47,12 @@ BEGIN
         updated_at = now()
     WHERE id = v_uid;
 
-    -- auth.identities 업데이트
     UPDATE auth.identities
     SET provider_id = v_new_email,
         identity_data = jsonb_build_object('sub', v_uid::TEXT, 'email', v_new_email),
         updated_at = now()
     WHERE user_id = v_uid AND provider = 'email';
 
-    -- user_profiles 업데이트
     UPDATE user_profiles
     SET email = v_new_email,
         updated_at = now()
@@ -56,13 +65,25 @@ BEGIN
 END $$;
 
 -- 3. 유니드: ppe-07@knc.id → ppe-06@knc.id
+--    (기존 ppe-06@knc.id 중복 계정이 있으면 먼저 제거 — 위 단계에서 이미 eng-37로 이동됨)
 DO $$
 DECLARE
   v_uid UUID;
+  v_dup_uid UUID;
   v_new_email TEXT := 'ppe-06@knc.id';
   v_new_pw TEXT := 'ppe-06!';
   v_pw_hash TEXT;
 BEGIN
+  -- 혹시 ppe-06@knc.id가 아직 남아있으면 제거
+  SELECT id INTO v_dup_uid FROM auth.users WHERE email = v_new_email;
+  IF v_dup_uid IS NOT NULL THEN
+    DELETE FROM knc_user_roles WHERE user_id = v_dup_uid;
+    DELETE FROM user_profiles WHERE id = v_dup_uid;
+    DELETE FROM auth.identities WHERE user_id = v_dup_uid;
+    DELETE FROM auth.users WHERE id = v_dup_uid;
+    RAISE NOTICE '중복 ppe-06@knc.id 계정 제거 (uid=%)', v_dup_uid;
+  END IF;
+
   SELECT id INTO v_uid FROM auth.users WHERE email = 'ppe-07@knc.id';
 
   IF v_uid IS NOT NULL THEN

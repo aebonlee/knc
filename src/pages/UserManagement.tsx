@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiSearch, FiUserPlus, FiTrash2, FiSave, FiUserCheck, FiEye } from 'react-icons/fi';
+import { FiSearch, FiUserPlus, FiTrash2, FiSave, FiUserCheck, FiEye, FiRotateCcw } from 'react-icons/fi';
 import { supabase, TABLES } from '../utils/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { initCompanyLoginIds, getCompanyLoginId } from '../hooks/useCompanyData';
@@ -36,10 +36,6 @@ const CATEGORY_TABS = [
   { key: 'edu', label: '행동교정', solutionType: '행동교정', prefix: 'edu', count: 7 },
 ] as const;
 
-function derivePassword(loginId: string): string {
-  return `${loginId}!`;
-}
-
 export default function UserManagement() {
   const { setImpersonateCompany } = useAuth();
   const navigate = useNavigate();
@@ -56,6 +52,9 @@ export default function UserManagement() {
   const [approving, setApproving] = useState<string | null>(null);
   const [approveRole, setApproveRole] = useState<KncRole>('company_member');
   const [approveCompanyId, setApproveCompanyId] = useState('');
+
+  // 비밀번호 초기화 중인 기업 ID
+  const [resettingId, setResettingId] = useState<string | null>(null);
 
   // 새 사용자 추가 폼
   const [showAdd, setShowAdd] = useState(false);
@@ -229,6 +228,29 @@ export default function UserManagement() {
   const handleImpersonate = (cid: string) => {
     setImpersonateCompany(cid);
     navigate(`/companies/${cid}/dashboard`);
+  };
+
+  // 비밀번호 초기화
+  const handleResetPassword = async (companyId: string, companyName: string) => {
+    if (!supabase) return;
+    if (!confirm(`${companyName}의 비밀번호를 초기화하시겠습니까?`)) return;
+    setResettingId(companyId);
+    try {
+      const { error } = await supabase.rpc('reset_company_password', {
+        target_company_id: companyId,
+      });
+      if (error) {
+        alert(`초기화 실패: ${error.message}`);
+        return;
+      }
+      alert(`${companyName} 비밀번호가 초기화되었습니다.`);
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      alert('비밀번호 초기화 중 오류가 발생했습니다.');
+    } finally {
+      setResettingId(null);
+    }
   };
 
   const filteredAssigned = users.filter(u =>
@@ -514,7 +536,7 @@ export default function UserManagement() {
                 <th>담당자명</th>
                 <th>연락처</th>
                 <th>이메일</th>
-                <th style={{ width: 90 }}>액션</th>
+                <th style={{ width: 150 }}>액션</th>
               </tr>
             </thead>
             <tbody>
@@ -531,7 +553,7 @@ export default function UserManagement() {
                       <td className="text-center">{c.company_no}</td>
                       <td><strong>{c.company_name}</strong></td>
                       <td><code className="login-id-code">{lid}</code></td>
-                      <td><code className="login-pw-code">{derivePassword(lid)}</code></td>
+                      <td><code className="login-pw-code">{c.initial_password || '-'}</code></td>
                       <td>{c.manager_name || <span className="text-muted">미등록</span>}</td>
                       <td>{c.manager_phone || <span className="text-muted">-</span>}</td>
                       <td>{c.manager_email || <span className="text-muted">-</span>}</td>
@@ -542,6 +564,15 @@ export default function UserManagement() {
                           title="기업 모드 전환"
                         >
                           <FiEye size={14} /> 전환
+                        </button>
+                        <button
+                          className="btn-icon btn-xs"
+                          onClick={() => handleResetPassword(c.id, c.company_name)}
+                          disabled={resettingId === c.id}
+                          title="비밀번호 초기화"
+                          style={{ marginLeft: 4 }}
+                        >
+                          <FiRotateCcw size={14} /> 초기화
                         </button>
                       </td>
                     </tr>

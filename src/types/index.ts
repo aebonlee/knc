@@ -41,6 +41,7 @@ export interface Company {
   sub_manager_phone: string | null;
   budget: number | null;
   solution_type: SolutionType;
+  initial_password: string | null;
   phase: number;
   created_at: string;
 }
