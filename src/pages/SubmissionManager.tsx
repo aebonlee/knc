@@ -198,7 +198,7 @@ export default function SubmissionManager() {
             const commentText = actionComment.trim() ? `<p style="margin-top:12px;padding:12px;background:#f5f5f5;border-radius:6px;"><strong>코멘트:</strong> ${actionComment.trim()}</p>` : '';
             sendEmail({
               to: submitter.email,
-              subject: `[산업안전 RBF] ${sub.company_name} ${sub.month} 실적 ${typeLabel}`,
+              subject: `[산업안전] ${sub.company_name} ${sub.month} 실적 ${typeLabel}`,
               html: buildEmailHtml({
                 title: `실적 ${typeLabel} 알림`,
                 body: `

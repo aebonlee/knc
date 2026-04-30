@@ -234,7 +234,7 @@ export default function CompanyDetail() {
           ? `<p style="margin-top:12px;padding:10px 14px;background:#F8FAFC;border-left:3px solid #0F2B5B;border-radius:4px;"><strong>결재 메모:</strong><br/>${memo}</p>`
           : '';
         notifyAdminsEmailSMS({
-          subject: `[산업안전 RBF] 새로운 실적 제출 — ${company?.company_name}`,
+          subject: `[산업안전] 새로운 실적 제출 — ${company?.company_name}`,
           htmlBody: `
             <p><strong>${company?.company_name}</strong>에서 <strong>${selectedMonth}</strong> 실적 데이터를 제출했습니다.</p>
             ${memoHtml}
@@ -245,7 +245,7 @@ export default function CompanyDetail() {
                 제출 관리 바로가기
               </a>
             </p>`,
-          smsMessage: `[산업안전RBF] ${company?.company_name} ${selectedMonth} 실적이 제출되었습니다. 검토 부탁드립니다.`,
+          smsMessage: `[산업안전] ${company?.company_name} ${selectedMonth} 실적이 제출되었습니다. 검토 부탁드립니다.`,
         });
       }
 

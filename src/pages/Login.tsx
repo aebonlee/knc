@@ -60,13 +60,13 @@ export default function Login() {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
             </svg>
-            산업안전 RBF 성과 분석
+            산업안전 성과 분석
           </div>
           <h2 className="login-visual-title">
             {'사회비용 절감,\n데이터로 증명하다'}
           </h2>
           <p className="login-visual-desc">
-            산업재해 사회비용 분석부터 기업별 성과 추적까지 — RBF 기반 성과 대시보드
+            산업재해 사회비용 분석부터 기업별 성과 추적까지 — 성과 대시보드
           </p>
 
           {/* 대시보드 미리보기 일러스트 */}
@@ -172,7 +172,7 @@ export default function Login() {
             </svg>
           </div>
           <div className="login-header">
-            <h1><span className="brand-k">2026</span> 산업안전 RBF</h1>
+            <h1><span className="brand-k">2026</span> 산업안전</h1>
             <p>사회비용 성과 대시보드</p>
           </div>
 

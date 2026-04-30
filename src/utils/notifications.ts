@@ -125,7 +125,7 @@ export function buildEmailHtml(params: {
   body: string;
 }): string {
   const { title, body } = params;
-  const siteName = '산업안전 RBF';
+  const siteName = '산업안전';
   const siteUrl = 'https://knc.dreamitbiz.com';
   const primaryColor = '#0F2B5B';
 

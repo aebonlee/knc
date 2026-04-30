@@ -44,7 +44,7 @@ export default function About() {
     <div className="page about-page">
       <div className="page-header">
         <h1>이용안내</h1>
-        <p>2026 산업안전 RBF 성과 대시보드 사용 가이드</p>
+        <p>2026 산업안전 성과 대시보드 사용 가이드</p>
       </div>
 
       {/* 시스템 소개 */}
@@ -52,7 +52,7 @@ export default function About() {
         <h2><FiInfo size={20} /> 시스템 소개</h2>
         <div className="about-intro-card">
           <p>
-            <strong>2026 산업안전 RBF(Results-Based Financing) 대시보드</strong>는
+            <strong>2026 산업안전 대시보드</strong>는
             산업재해 사회비용 절감 성과를 데이터 기반으로 분석하고 관리하는 시스템입니다.
           </p>
           <ul>

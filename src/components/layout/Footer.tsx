@@ -4,7 +4,7 @@ export default function Footer() {
       <div className="footer-container">
         <div className="footer-brand">
           <span className="brand-k">2026</span>
-          <span className="brand-sub">산업안전 RBF 사회비용 성과 대시보드</span>
+          <span className="brand-sub">산업안전 사회비용 성과 대시보드</span>
         </div>
         <div className="footer-info">
           <p>&copy; {new Date().getFullYear()} DreamIT Biz. All rights reserved.</p>

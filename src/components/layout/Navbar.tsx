@@ -83,7 +83,7 @@ export default function Navbar() {
     <nav className={`navbar${impersonateCompanyId ? ' navbar-impersonate' : ''}`}>
       <div className="nav-container">
         <Link to="/" className="nav-brand">
-          <span className="brand-dash">산업안전 RBF</span>
+          <span className="brand-dash">산업안전</span>
         </Link>
 
         <button className="nav-toggle" onClick={() => setMenuOpen(!menuOpen)}>

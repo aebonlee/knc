@@ -54,7 +54,7 @@ export default function Report() {
 
       const date = new Date().toISOString().slice(0, 10);
       const prefix = tab === 'overall' ? '전체' : tab === 'company' ? '기업별' : '월별';
-      pdf.save(`KNC_산업안전_RBF_${prefix}_보고서_${date}.pdf`);
+      pdf.save(`KNC_산업안전_${prefix}_보고서_${date}.pdf`);
     } catch (err) {
       console.error('PDF 생성 오류:', err);
     } finally {
