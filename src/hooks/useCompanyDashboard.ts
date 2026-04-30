@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase, TABLES } from '../utils/supabase';
-import { getCompanyTotal, getActivitySaving } from './useCompanyData';
+import { getCompanyTotal, getActivitySaving, initCompanyLoginIds } from './useCompanyData';
 import type {
   Company, DemandCompany, Activity, ReferenceData,
   ProjectSettings, RiskSummary, CompanyMonth, CompanyUnitPrice,
@@ -33,7 +33,7 @@ export function useCompanyDashboard(companyId: string | undefined) {
     }
     setLoading(true);
     try {
-      const [compRes, demandRes, actRes, refRes, priceRes, setRes, monthRes] = await Promise.all([
+      const [compRes, demandRes, actRes, refRes, priceRes, setRes, monthRes, allCompRes] = await Promise.all([
         supabase.from(TABLES.companies).select('*').eq('id', companyId).single(),
         supabase.from(TABLES.demand_companies).select('*').eq('company_id', companyId).order('demand_no'),
         supabase.from(TABLES.activities).select('*').eq('company_id', companyId),
@@ -41,7 +41,9 @@ export function useCompanyDashboard(companyId: string | undefined) {
         supabase.from(TABLES.company_unit_prices).select('*').eq('company_id', companyId),
         supabase.from(TABLES.project_settings).select('*').limit(1).single(),
         supabase.from(TABLES.company_months).select('*').eq('company_id', companyId).order('month'),
+        supabase.from(TABLES.companies).select('company_no, solution_type').order('company_no'),
       ]);
+      if (allCompRes.data) initCompanyLoginIds(allCompRes.data);
       if (compRes.data) setCompany(compRes.data);
       if (demandRes.data) setDemandCompanies(demandRes.data);
       if (actRes.data) setActivities(actRes.data);

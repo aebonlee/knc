@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiUserPlus, FiTrash2, FiSave, FiUserCheck, FiEye } from 'react-icons/fi';
 import { supabase, TABLES } from '../utils/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { initCompanyLoginIds, getCompanyLoginId } from '../hooks/useCompanyData';
 import type { KncRole, KncUserRole, Company } from '../types';
 
 interface UserRow {
@@ -30,21 +31,10 @@ const HIDDEN_EMAILS = ['aebon@kakao.com', 'aebon@kyonggi.ac.kr'];
 
 // 카테고리 탭 정의
 const CATEGORY_TABS = [
-  { key: 'eng', label: '공학', solutionType: '공학', prefix: 'eng', count: 36 },
-  { key: 'ppe', label: '보호구', solutionType: '보호구', prefix: 'ppe', count: 7 },
+  { key: 'eng', label: '공학', solutionType: '공학', prefix: 'eng', count: 37 },
+  { key: 'ppe', label: '보호구', solutionType: '보호구', prefix: 'ppe', count: 6 },
   { key: 'edu', label: '행동교정', solutionType: '행동교정', prefix: 'edu', count: 7 },
 ] as const;
-
-// company_no + solution_type에서 아이디 자동 파생
-function deriveLoginId(company: Company): string {
-  if (company.solution_type === '공학') {
-    return `eng-${String(company.company_no).padStart(2, '0')}`;
-  } else if (company.solution_type === '보호구') {
-    return `ppe-${String(company.company_no - 36).padStart(2, '0')}`;
-  } else {
-    return `edu-${String(company.company_no - 43).padStart(2, '0')}`;
-  }
-}
 
 function derivePassword(loginId: string): string {
   return `${loginId}!`;
@@ -84,6 +74,7 @@ export default function UserManagement() {
       ]);
       const roles: KncUserRole[] = rolesRes.data || [];
       const comps: Company[] = compRes.data || [];
+      initCompanyLoginIds(comps);
       setCompanies(comps);
 
       // 역할 배정된 사용자
@@ -534,7 +525,7 @@ export default function UserManagement() {
                   (c.manager_name || '').toLowerCase().includes(search.toLowerCase())
                 )
                 .map(c => {
-                  const lid = deriveLoginId(c);
+                  const lid = getCompanyLoginId(c.company_no);
                   return (
                     <tr key={c.id}>
                       <td className="text-center">{c.company_no}</td>

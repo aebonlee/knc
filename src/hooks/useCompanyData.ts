@@ -62,21 +62,36 @@ export const formatWon = (value: number): string => {
   return new Intl.NumberFormat('ko-KR').format(Math.round(value)) + '원';
 };
 
+// solution_type 그룹 내 순번 기반 로그인 ID 파생
+let _loginCacheRef: any[] = [];
+const _loginIdMap = new Map<number, string>();
+
+export function initCompanyLoginIds(companies: { company_no: number; solution_type: string }[]) {
+  if (_loginCacheRef === companies && _loginIdMap.size > 0) return;
+  _loginCacheRef = companies;
+  _loginIdMap.clear();
+  const groups: Record<string, typeof companies> = { '공학': [], '보호구': [], '행동교정': [] };
+  for (const c of companies) {
+    if (groups[c.solution_type]) groups[c.solution_type].push(c);
+  }
+  const prefixMap: Record<string, string> = { '공학': 'eng', '보호구': 'ppe', '행동교정': 'edu' };
+  for (const [type, list] of Object.entries(groups)) {
+    list.sort((a, b) => a.company_no - b.company_no);
+    list.forEach((c, i) => {
+      _loginIdMap.set(c.company_no, `${prefixMap[type]}-${String(i + 1).padStart(2, '0')}`);
+    });
+  }
+}
+
+export function getCompanyLoginId(companyNo: number): string {
+  return _loginIdMap.get(companyNo) || `unknown-${companyNo}`;
+}
+
 // 기업별 증빙 자료등록 URL (Padlet)
 export const getPadletUrl = (company: { company_no: number; solution_type: string }): string => {
-  let prefix: string;
-  let seq: number;
-  if (company.solution_type === '보호구') {
-    prefix = 'ppe';
-    seq = company.company_no - 36;
-  } else if (company.solution_type === '행동교정') {
-    prefix = 'edu';
-    seq = company.company_no - 43;
-  } else {
-    prefix = 'eng';
-    seq = company.company_no;
-  }
-  return `https://padlet.com/aebon/${prefix}_${String(seq).padStart(2, '0')}`;
+  const loginId = getCompanyLoginId(company.company_no);
+  const slug = loginId.replace('-', '_');
+  return `https://padlet.com/aebon/${slug}`;
 };
 
 // 숫자 포맷 (백만원 단위)
@@ -119,7 +134,7 @@ export function useCompanyData(phaseFilter?: number, monthFilter?: string[]) {
         supabase.from(TABLES.project_settings).select('*').order('phase'),
       ]);
 
-      if (compRes.data) setAllCompanies(compRes.data);
+      if (compRes.data) { initCompanyLoginIds(compRes.data); setAllCompanies(compRes.data); }
       if (demandRes.data) setAllDemandCompanies(demandRes.data);
       if (actRes.data) setAllActivities(actRes.data);
       if (refRes.data && refRes.data.length > 0) setReferenceData(refRes.data);

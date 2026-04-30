@@ -2,10 +2,10 @@
 -- KNC 50개 기업 담당자 계정 일괄 생성
 -- 생성일: 2026-04-28
 --
--- 아이디 규칙:
---   공학(1~36):   eng-01 ~ eng-36  / 비밀번호: eng-01! ~ eng-36!
---   보호구(37~43): ppe-01 ~ ppe-07  / 비밀번호: ppe-01! ~ ppe-07!
---   행동교정(44~50): edu-01 ~ edu-07 / 비밀번호: edu-01! ~ edu-07!
+-- 아이디 규칙 (solution_type 그룹 내 company_no 순번):
+--   공학(37개):     eng-01 ~ eng-37  / 비밀번호: eng-01! ~ eng-37!
+--   보호구(6개):    ppe-01 ~ ppe-06  / 비밀번호: ppe-01! ~ ppe-06!
+--   행동교정(7개):  edu-01 ~ edu-07  / 비밀번호: edu-01! ~ edu-07!
 --
 -- 내부 이메일: {아이디}@knc.id (Supabase auth 필수 형식)
 -- UI에서는 @knc.id 숨기고 아이디만 표시
@@ -21,23 +21,20 @@ DECLARE
   login_email TEXT;
   login_pw TEXT;
   pw_hash TEXT;
-  seq_num INT;
 BEGIN
   FOR rec IN
-    SELECT id, company_no, company_name, solution_type
+    SELECT id, company_no, company_name, solution_type,
+           ROW_NUMBER() OVER (PARTITION BY solution_type ORDER BY company_no)::INT AS seq_num
     FROM knc_companies
     ORDER BY company_no
   LOOP
-    -- 아이디/비밀번호 생성
+    -- 아이디/비밀번호 생성 (solution_type 그룹 내 순번)
     IF rec.solution_type = '공학' THEN
-      seq_num := rec.company_no;
-      login_id := 'eng-' || LPAD(seq_num::TEXT, 2, '0');
+      login_id := 'eng-' || LPAD(rec.seq_num::TEXT, 2, '0');
     ELSIF rec.solution_type = '보호구' THEN
-      seq_num := rec.company_no - 36;
-      login_id := 'ppe-' || LPAD(seq_num::TEXT, 2, '0');
+      login_id := 'ppe-' || LPAD(rec.seq_num::TEXT, 2, '0');
     ELSIF rec.solution_type = '행동교정' THEN
-      seq_num := rec.company_no - 43;
-      login_id := 'edu-' || LPAD(seq_num::TEXT, 2, '0');
+      login_id := 'edu-' || LPAD(rec.seq_num::TEXT, 2, '0');
     END IF;
 
     login_email := login_id || '@knc.id';
